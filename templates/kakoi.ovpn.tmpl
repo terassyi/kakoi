@@ -1,0 +1,26 @@
+client
+dev tun
+proto udp
+remote {{ .Id }}.prod.clientvpn.{{ .Region }}.amazonaws.com 443
+remote-random-hostname
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-GCM
+pull-filter ignore redirect-gateway
+route {{ .Addr }} {{ .Mask }}   #接続先VPCのCI
+verb 3
+
+<ca>
+{{ .CaCert }}
+</ca>
+<cert>
+{{ .Cert }}
+</cert>
+<key>
+{{ .Key }}
+</key>
+
+reneg-sec 0
