@@ -1,0 +1,44 @@
+provider:
+  name: "aws"
+  profile: "kakoi"
+  region: "ap-northeast-1"
+
+service:
+  name: "example"
+
+  network:
+    range: "10.10.0.0/16"
+    subnets:
+      - name: "subnet1"
+        range: "10.10.10.0/24"
+        private: true
+        vpn_gateway_associated: true
+        routes:
+          - from: "0.0.0.0/0"
+            to: "10.10.10.0/24"
+
+      - name: "subnet2"
+        range: "10.10.20.0/24"
+        private: true
+        routes:
+          - from: "0.0.0.0/0"
+            to: "10.10.20.0/24"
+
+    vpn_gateway:
+      range: "10.10.30.0/22"
+      associated_subnet: "subnet1"
+
+  servers:
+    - name: "example-host1"
+      subnet: "subnet1"
+      ports:
+        - 80
+        - 22
+        - 443
+
+    - name: "example-host2"
+      subnet: "subnet2"
+      port:
+        - 80
+        - 22
+        - 8080
