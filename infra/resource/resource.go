@@ -1,8 +1,7 @@
 package resource
 
-import "net"
-
-type Network struct {
-	name string
-	cidr net.IPNet
+type Resource interface {
+	BuildTemplate(workDir string) error
 }
+
+const templatePathAws string = "./templates/aws"

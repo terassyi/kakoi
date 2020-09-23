@@ -1,0 +1,11 @@
+
+resource "aws_subnet" "{{ .Name }}" {
+    vpc_id = "${aws_vpc.{{ .Network.Name }}.id}"
+    availability_zone = "{{ .Region }}"
+
+    cidr_block = "{{ .Cidr }}"
+
+    tags = {
+        Name = "{{ .Name }}"
+    }
+}

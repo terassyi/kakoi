@@ -26,6 +26,5 @@ func New(workDir, profile, region string) (*Infra, error) {
 }
 
 func (i *Infra) BuildTemplate() error {
-
 	return nil
 }

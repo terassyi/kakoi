@@ -1,0 +1,9 @@
+// vpc
+resource "aws_vpc" "{{ .Name }}" {
+    cidr_block = "{{ .Cidr }}"
+    enable_dns_hostnames = true
+
+    tags = {
+        Name = "{{ .Name }}"
+    }
+}

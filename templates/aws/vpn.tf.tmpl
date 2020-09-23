@@ -1,0 +1,26 @@
+// client vpn
+resource "aws_ec2_client_vpn_endpoint" "kakoi-vpn-gateway" {
+    description = "kakoi client vpn endpoint"
+    server_certificate_arn = "${ aws_acm_certificate.kakoi-acm-server.arn }"
+    client_cidr_block = "{{ .Cidr }}"
+    dns_servers = [
+        "8.8.8.8",
+    ]
+
+    authentication_options {
+        type = "certificate-authentication"
+        root_certificate_chain_arn = "${ aws_acm_certificate.kakoi-acm-ca.arn }" //
+
+    }
+    connection_log_options {
+        enabled = false
+    }
+    tags = {
+        Name = "kakoi-vpn-endpoint"
+    }
+}
+
+resource "aws_ec2_client_vpn_network_association" "kakoi-vpn" {
+    client_vpn_endpoint_id = "${ aws_ec2_client_vpn_endpoint.kakoi-vpn.id }"
+    subnet_id = "${ aws_subnet.{{ .AssociatedSubnet.Name }}.id }"
+}
