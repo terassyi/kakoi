@@ -1,4 +1,4 @@
-package pki
+package cert
 
 import (
 	"crypto/rand"
@@ -6,8 +6,10 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"golang.org/x/crypto/ssh"
 	"math/big"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -143,4 +145,55 @@ func GeneratePki() error {
 		return err
 	}
 	return nil
+}
+
+func GenerateKeyPair(name, path string) error {
+	privateKey, err := generatePrivateKey()
+	if err != nil {
+		return err
+	}
+	publicKey, err := generatePublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return err
+	}
+	// encode
+	privateKeyFile, err := os.Create(filepath.Join(path, name) + ".pem")
+	if err != nil {
+		return err
+	}
+	defer privateKeyFile.Close()
+	if err := pem.Encode(privateKeyFile, &pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PrivateKey(privateKey),
+	}); err != nil {
+		return err
+	}
+
+	publicKeyFile, err := os.Create(filepath.Join(path, name) + ".pub")
+	if err != nil {
+		return err
+	}
+	defer publicKeyFile.Close()
+	pubKeyBytes := ssh.MarshalAuthorizedKey(publicKey)
+	if _, err := publicKeyFile.Write(pubKeyBytes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func generatePrivateKey() (*rsa.PrivateKey, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return nil, err
+	}
+	err = privateKey.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return privateKey, nil
+}
+
+func generatePublicKey(publicKey *rsa.PublicKey) (ssh.PublicKey, error) {
+	return ssh.NewPublicKey(publicKey)
 }
