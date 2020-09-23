@@ -1,0 +1,5 @@
+// key pair
+resource "aws_key_pair" "{{ .Name }}-keypair" {
+    key_name = "{{ .Name }}"
+    public_key = file("{{ .Path }}/{{ .Pub }}")
+}

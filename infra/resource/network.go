@@ -97,7 +97,9 @@ func newRoute(from, to string) (*Route, error) {
 
 type Vpn struct {
 	Cidr             *net.IPNet
+	Domain           string
 	AssociatedSubnet *Subnet
+	Pki              *Pki
 }
 
 func newVpn(cidr string, subnet *Subnet) (*Vpn, error) {

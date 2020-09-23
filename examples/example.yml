@@ -26,6 +26,7 @@ service:
 
     vpn_gateway:
       range: "10.10.30.0/22"
+      domain: "example.kakoi.terrasyi.net"
       associated_subnet: "subnet1"
 
   servers:
