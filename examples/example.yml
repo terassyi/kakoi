@@ -7,6 +7,7 @@ service:
   name: "example"
 
   network:
+    name: "kakoi"
     range: "10.10.0.0/16"
     subnets:
       - name: "subnet1"
@@ -43,3 +44,5 @@ service:
         - 80
         - 22
         - 8080
+
+  key_pair_name: "example-key"

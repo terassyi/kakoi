@@ -1,47 +1,42 @@
 package config
 
-type Config struct {
-	Provider Provider `yaml:"provider"`
-	Service  Service  `yaml:"service"`
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+const (
+	kakoi_dir string = ".kakoi"
+	ext_yaml  string = ".yaml"
+	ext_yml   string = ".yml"
+)
+
+func CreateWorkDir(path string) (string, error) {
+	// if work on current dir, path = ""
+	workPath := filepath.Join(path, kakoi_dir)
+	if err := os.MkdirAll(workPath, 755); err != nil {
+		return "", err
+	}
+	// pki cert files
+	if err := os.MkdirAll(filepath.Join(workPath, "pki"), 755); err != nil {
+		return "", err
+	}
+	// server key pair
+	if err := os.MkdirAll(filepath.Join(workPath, "keys"), 755); err != nil {
+		return "", err
+	}
+	// output files
+	if err := os.MkdirAll(filepath.Join(workPath, "output"), 755); err != nil {
+		return "", err
+	}
+	return workPath, nil
 }
 
-type Service struct {
-	Name    string  `yaml:"name"`
-	Network Network `yaml:"network"`
-	Servers []Host  `yaml:"servers"`
-}
-
-type Provider struct {
-	Name    string `yaml:"name"`
-	Profile string `yaml:"profile"`
-	Region  string `yaml:"region"`
-}
-
-type Network struct {
-	Range   string   `yaml:"range"`
-	Subnets []Subnet `yaml:"subnets"`
-}
-
-type Subnet struct {
-	Name                 string  `yaml:"name"`
-	Range                string  `yaml:"range"`
-	Private              bool    `yaml:"private"`
-	VpnGatewayAssociated bool    `yaml:"vpn_gateway_associated"`
-	Routes               []Route `yaml:"routes"`
-}
-
-type Route struct {
-	From string `yaml:"from"`
-	To   string `yaml:"to"`
-}
-
-type VpnGateway struct {
-	Range            string `yaml:"range"`
-	AssociatedSubnet string `yaml:"associated_subnet"`
-}
-
-type Host struct {
-	Name   string `yaml:"name"`
-	Subnet string `yaml:"subnet"`
-	Ports  []int  `yaml:"ports"`
+func ValidateExtName(file string) error {
+	extName := filepath.Ext(file)
+	if extName != ext_yaml && extName != ext_yml {
+		return fmt.Errorf("config file must be .yaml of .yml format")
+	}
+	return nil
 }

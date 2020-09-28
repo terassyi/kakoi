@@ -12,7 +12,7 @@ type Provider struct {
 	Name    string
 }
 
-func newProvider(profile, region string) *Provider {
+func NewProvider(profile, region string) *Provider {
 	return &Provider{
 		Profile: profile,
 		Region:  region,
@@ -27,7 +27,7 @@ func (p *Provider) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("vpn.tf.tmpl").ParseFiles("../../templates/aws/vpn.tf.tmpl")
+	t, err := template.New("provider.tf.tmpl").ParseFiles("../../templates/aws/provider.tf.tmpl")
 	if err != nil {
 		return err
 	}

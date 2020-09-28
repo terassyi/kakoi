@@ -22,7 +22,9 @@ func (p *Parser) Parse() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{}
+	config := &Config{
+		WorkDir: p.workDir,
+	}
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, err
 	}

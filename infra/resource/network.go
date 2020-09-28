@@ -102,13 +102,14 @@ type Vpn struct {
 	Pki              *Pki
 }
 
-func newVpn(cidr string, subnet *Subnet) (*Vpn, error) {
+func newVpn(cidr, domain string, subnet *Subnet) (*Vpn, error) {
 	_, cidrNet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
 	return &Vpn{
 		Cidr:             cidrNet,
+		Domain:           domain,
 		AssociatedSubnet: subnet,
 	}, nil
 }
