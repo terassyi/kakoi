@@ -49,7 +49,7 @@ func New(conf *config.Config) ([]Resource, error) {
 	// TODO firewall settings
 
 	// pki settings
-	resources = append(resources, newPki(filepath.Join(conf.WorkDir, ".kakoi/pki"), conf.Service.Network.Vpn.Domain))
+	resources = append(resources, newPki(filepath.Join(conf.WorkDir, "pki"), conf.Service.Network.Vpn.Domain))
 
 	// vpn
 	if vpnAssociatedSubnet == nil {
@@ -63,7 +63,7 @@ func New(conf *config.Config) ([]Resource, error) {
 
 	// server
 	// key pair
-	resources = append(resources, newKeyPair(filepath.Join(conf.WorkDir, ".pki/keys"), conf.Service.KeyPair))
+	resources = append(resources, newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.KeyPair))
 
 	// TODO hosts
 	//for _, host := range conf.Service.Servers {

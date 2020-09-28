@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	yaml "github.com/goccy/go-yaml"
 	"io/ioutil"
 )
@@ -18,6 +19,7 @@ func NewParser(workDir, path string) (*Parser, error) {
 }
 
 func (p *Parser) Parse() (*Config, error) {
+	fmt.Println("target path: ", p.targetPath)
 	data, err := ioutil.ReadFile(p.targetPath)
 	if err != nil {
 		return nil, err

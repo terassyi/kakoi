@@ -32,7 +32,7 @@ func (n *Network) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("vpc.tf.tmpl").ParseFiles(filepath.Join("../../templates/aws", "vpc.tf.tmpl"))
+	t, err := template.New("vpc.tf.tmpl").ParseFiles(filepath.Join("templates/aws", "vpc.tf.tmpl"))
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (s *Subnet) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("subnet.tf.tmpl").ParseFiles(filepath.Join("../../templates/aws", "subnet.tf.tmpl"))
+	t, err := template.New("subnet.tf.tmpl").ParseFiles(filepath.Join("templates/aws", "subnet.tf.tmpl"))
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (v *Vpn) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("vpn.tf.tmpl").ParseFiles("../../templates/aws/vpn.tf.tmpl")
+	t, err := template.New("vpn.tf.tmpl").ParseFiles("templates/aws/vpn.tf.tmpl")
 	if err != nil {
 		return err
 	}

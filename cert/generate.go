@@ -13,15 +13,15 @@ import (
 	"time"
 )
 
-func GeneratePki() error {
+func GeneratePki(path, domain string) error {
 	privateCaKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return err
 	}
 	publicCaKey := privateCaKey.Public()
-
+	caName := "ca." + domain
 	subjectCa := pkix.Name{
-		CommonName:         "ca.kakoi.terassyi.net",
+		CommonName:         caName,
 		OrganizationalUnit: []string{"kakoi"},
 		Organization:       []string{"kakoi"},
 		Country:            []string{"JP"},
@@ -39,7 +39,7 @@ func GeneratePki() error {
 
 	caCertificate, err := x509.CreateCertificate(rand.Reader, caTpl, caTpl, publicCaKey, privateCaKey)
 
-	caCertFile, err := os.Create("../data/ca01.crt")
+	caCertFile, err := os.Create(filepath.Join(path, caName+".crt"))
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func GeneratePki() error {
 		return err
 	}
 
-	caKeyFile, err := os.Create("../data/ca01.key")
+	caKeyFile, err := os.Create(filepath.Join(path, caName+".key"))
 	if err != nil {
 		return err
 	}
@@ -62,9 +62,9 @@ func GeneratePki() error {
 		return err
 	}
 	publicSslKey := privateSslKey.Public()
-
+	serverName := "server." + domain
 	subjectSsl := pkix.Name{
-		CommonName:         "server.kakoi.terassyi.net",
+		CommonName:         serverName,
 		OrganizationalUnit: []string{"kakoi"},
 		Organization:       []string{"kakoi"},
 		Country:            []string{"JP"},
@@ -77,14 +77,14 @@ func GeneratePki() error {
 		NotBefore:    time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		DNSNames:     []string{"server.kakoi.terassyi.net"},
+		DNSNames:     []string{serverName},
 	}
 
 	derSslCertificate, err := x509.CreateCertificate(rand.Reader, sslTpl, caTpl, publicSslKey, privateCaKey)
 	if err != nil {
 		return err
 	}
-	sslServerCrtFile, err := os.Create("../data/server.crt")
+	sslServerCrtFile, err := os.Create(filepath.Join(path, serverName+".crt"))
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func GeneratePki() error {
 		return err
 	}
 
-	sslServerKeyFile, err := os.Create("../server.key")
+	sslServerKeyFile, err := os.Create(filepath.Join(path, serverName+".key"))
 	if err != nil {
 		return err
 	}
@@ -106,8 +106,9 @@ func GeneratePki() error {
 	publicClientKey := privateClientKey.Public()
 
 	//Client Certificate
+	clientName := "client." + domain
 	subjectClient := pkix.Name{
-		CommonName:         "client.kakoi.terassyi.net",
+		CommonName:         clientName,
 		OrganizationalUnit: []string{"kakoi"},
 		Organization:       []string{"kakoi"},
 		Country:            []string{"JP"},
@@ -127,7 +128,7 @@ func GeneratePki() error {
 		return err
 	}
 
-	clientCertFile, err := os.Create("../data/client.crt")
+	clientCertFile, err := os.Create(filepath.Join(path, clientName+".crt"))
 	if err != nil {
 		return err
 	}
@@ -136,7 +137,7 @@ func GeneratePki() error {
 		return err
 	}
 
-	clientKeyFile, err := os.Create("../data/client.key")
+	clientKeyFile, err := os.Create(filepath.Join(path, clientName+".key"))
 	if err != nil {
 		return err
 	}

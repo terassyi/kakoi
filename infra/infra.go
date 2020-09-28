@@ -1,8 +1,9 @@
 package infra
 
 import (
-	"context"
+	"fmt"
 	"github.com/terassyi/kakoi/config"
+	"github.com/terassyi/kakoi/infra/resource"
 	"path/filepath"
 )
 
@@ -20,6 +21,7 @@ type infra struct {
 }
 
 func New(path string) (Infrastructure, error) {
+	fmt.Println("path: ", path)
 	dir, file := filepath.Split(path)
 	if err := config.ValidateExtName(file); err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func New(path string) (Infrastructure, error) {
 	if err != nil {
 		return nil, err
 	}
-	parser, err := config.NewParser(path, workDir)
+	parser, err := config.NewParser(workDir, path)
 	if err != nil {
 		return nil, err
 	}
@@ -69,5 +71,25 @@ func (i *infra) Create() error {
 	if err := i.Build(); err != nil {
 		return err
 	}
-	return i.tf.Apply(context.Background())
+	if err := i.createCertFiles(); err != nil {
+		return err
+	}
+	//return i.tf.Apply(context.Background())
+	return nil
+}
+
+func (i *infra) createCertFiles() error {
+	for _, r := range i.resources {
+		switch c := r.(type) {
+		case *resource.Pki:
+			if err := c.Create(); err != nil {
+				return err
+			}
+		case *resource.KeyPair:
+			if err := c.Create(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
