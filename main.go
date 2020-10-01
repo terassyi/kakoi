@@ -14,6 +14,7 @@ func main() {
 	subcommands.Register(subcommands.CommandsCommand(), "")
 
 	subcommands.Register(&cmd.Create{}, "infra")
+	subcommands.Register(&cmd.Destroy{}, "infra")
 
 	flag.Parse()
 	ctx := context.Background()

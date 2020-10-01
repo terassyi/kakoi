@@ -1,0 +1,21 @@
+// instance
+resource "aws_instance" "{{ .Name }}" {
+    ami = "ami-0cc75a8978fbbc969"
+    instance_type = "t2.micro"
+    subnet_id = "${aws_subnet.{{ .Subnet.Name }}.id}"
+
+    key_name = "${aws_key_pair.{{ .KeyPair.Name }}.id}"
+#     associate_public_ip_address = true
+
+    # vpc_security_group_ids = [
+        # "${aws_security_group.example-server.id}"
+    # ]
+
+    tags = {
+        Name = "{{ .Name }}"
+    }
+}
+
+output "instance-private-ip-{{ .Name }}" {
+    value = "${ aws_instance.{{ .Name }}.private_ip }"
+}

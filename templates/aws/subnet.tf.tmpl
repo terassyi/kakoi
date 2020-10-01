@@ -1,7 +1,7 @@
 
 resource "aws_subnet" "{{ .Name }}" {
     vpc_id = "${aws_vpc.{{ .Network.Name }}.id}"
-    availability_zone = "{{ .Region }}"
+    availability_zone = "{{ .AZ }}"
 
     cidr_block = "{{ .Cidr }}"
 

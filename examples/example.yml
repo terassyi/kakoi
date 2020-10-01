@@ -45,4 +45,4 @@ service:
         - 22
         - 8080
 
-  key_pair_name: "example-key"
+  key_pair_name: "example-kakoi-key"

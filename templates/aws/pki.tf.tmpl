@@ -1,20 +1,20 @@
 // acm
 // ca
 resource "aws_acm_certificate" "kakoi-acm-ca" {
-    private_key = file("{{ .Path }}/{{ .CaKey }}")
-    certificate_body = file("{{ .Path }}/{{ .CaCert }}")
+    private_key = file("{{ .WorkPath }}/{{ .CaKey }}")
+    certificate_body = file("{{ .WorkPath }}/{{ .CaCert }}")
 }
 
 // server
 resource "aws_acm_certificate" "kakoi-acm-server" {
-    private_key = file("{{ .Path }}/{{ .ServerKey }}")
-    certificate_body = file("{{ .Path }}/{{ .ServerCert }}")
-    certificate_chain = file("{{ .Path }}/{{ .CaCert }}")
+    private_key = file("{{ .WorkPath }}/{{ .ServerKey }}")
+    certificate_body = file("{{ .WorkPath }}/{{ .ServerCert }}")
+    certificate_chain = file("{{ .WorkPath }}/{{ .CaCert }}")
 }
 
 // client
 resource "aws_acm_certificate" "kakoi-acm-client" {
-    private_key = file("{{ .Path }}/{{ .ClientKey }}")
-    certificate_body = file("{{ .Path }}/{{ .ClientCert }}")
-    certificate_chain = file("{{ .Path }}/{{ .CaCert }}")
+    private_key = file("{{ .WorkPath }}/{{ .ClientKey }}")
+    certificate_body = file("{{ .WorkPath }}/{{ .ClientCert }}")
+    certificate_chain = file("{{ .WorkPath }}/{{ .CaCert }}")
 }

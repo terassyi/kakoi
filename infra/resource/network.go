@@ -1,10 +1,17 @@
 package resource
 
 import (
+	"encoding/json"
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"net"
 	"os"
 	"path/filepath"
 	"text/template"
+)
+
+const (
+	kakoi_vpn_id string = "kakoi-vpn-id"
+	kakoi_ovpn_config_name string = "kakoi.ovpn"
 )
 
 type Network struct {
@@ -44,7 +51,7 @@ type Subnet struct {
 	Network *Network
 	Cidr    *net.IPNet
 	Private bool
-	Region  string
+	AZ  string
 }
 
 func newSubnet(name, cidr string, private bool, network *Network) (*Subnet, error) {
@@ -57,7 +64,7 @@ func newSubnet(name, cidr string, private bool, network *Network) (*Subnet, erro
 		Network: network,
 		Cidr:    ipNet,
 		Private: private,
-		Region:  network.Region,
+		AZ:  network.Region + "a",
 	}, nil
 }
 
@@ -127,3 +134,82 @@ func (v *Vpn) BuildTemplate(workDir string) error {
 	}
 	return t.Execute(file, v)
 }
+
+func (v *Vpn) SetPki(pki *Pki) {
+	v.Pki = pki
+}
+
+func (v *Vpn) Create() error {
+	return v.createOvpnConfig()
+}
+
+
+func (v *Vpn) createOvpnConfig() error {
+	type ovpnConfig struct {
+		Id     string
+		Region string
+		Addr   string
+		Mask   string
+		CaCert string
+		Cert   string
+		Key    string
+	}
+	// build path
+	outputPath := filepath.Join(filepath.Join(v.Pki.Path[:len(v.Pki.Path)-3], "output"), "output.json")
+	if _, err := os.Stat(outputPath); err != nil {
+		return err
+	}
+	outputFile, err := os.Open(outputPath)
+	if err != nil {
+		return err
+	}
+	bytes := make([]byte, 512)
+	l, err := outputFile.Read(bytes)
+	if err != nil {
+		return err
+	}
+	outputData := make(map[string]tfexec.OutputMeta)
+	if err := json.Unmarshal(bytes[:l], &outputData); err != nil {
+		return err
+	}
+	vpnId, err := getOutputValue(outputData, "kakoi-vpn-id")
+	if err != nil {
+		return err
+	}
+	caCertString, err := v.Pki.ReadCaCert()
+	if err != nil {
+		return err
+	}
+	clientCertString, err := v.Pki.ReadClientCert()
+	if err != nil {
+		return err
+	}
+	clientKeyString, err := v.Pki.ReadClientKey()
+	if err != nil {
+		return err
+	}
+	ipnet := v.AssociatedSubnet.Network.Cidr
+	config := &ovpnConfig{
+		Id:     vpnId,
+		Region: v.AssociatedSubnet.Network.Region,
+		Addr:   v.AssociatedSubnet.Network.Cidr.IP.String(),
+		Mask:   net.IP{ipnet.Mask[0], ipnet.Mask[1], ipnet.Mask[2], ipnet.Mask[3]}.String(),
+		CaCert: caCertString,
+		Cert:   clientCertString,
+		Key:    clientKeyString,
+	}
+	t, err := template.New("kakoi.ovpn.tmpl").ParseFiles("templates/kakoi.ovpn.tmpl")
+	if err != nil {
+		return err
+	}
+	ovpnConfigFile, err := os.Create(kakoi_ovpn_config_name)
+	if err != nil {
+		return err
+	}
+	defer ovpnConfigFile.Close()
+	if err := t.Execute(ovpnConfigFile, config); err != nil {
+		return err
+	}
+	return nil
+}
+

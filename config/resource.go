@@ -9,7 +9,7 @@ type Config struct {
 type Service struct {
 	Name    string  `yaml:"name"`
 	Network Network `yaml:"network"`
-	Servers []Host  `yaml:"servers"`
+	Servers []Server  `yaml:"servers"`
 	KeyPair string  `yaml:"key_pair_name"`
 }
 
@@ -45,7 +45,7 @@ type VpnGateway struct {
 	AssociatedSubnet string `yaml:"associated_subnet"`
 }
 
-type Host struct {
+type Server struct {
 	Name   string `yaml:"name"`
 	Subnet string `yaml:"subnet"`
 	Ports  []int  `yaml:"ports"`

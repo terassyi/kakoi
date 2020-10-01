@@ -1,0 +1,43 @@
+// security group
+resource "aws_security_group" "{{ .Name }}" {
+    name = "{{ .Name }}"
+    description = "kakoi security group"
+    vpc_id = "${aws_vpc.{{ .VpcName }}.id}"
+
+    // udp 443
+    ingress {
+        description = "vpn traffic"
+        from_port = "443"
+        to_port = "443"
+        protocol = "udp"
+        cidr_blocks = ["0.0.0.0/0"] // this field should be specified
+    }
+    // https
+    ingress {
+        description = "https"
+        from_port = "443"
+        to_port = "443"
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] // this field should be specified
+    }
+    // http
+    ingress {
+        description = "http"
+        from_port = "80"
+        to_port = "80"
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] // this field also should be specified
+    }
+
+    // egress
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = {
+        Name = "example-server-sg"
+    }
+}

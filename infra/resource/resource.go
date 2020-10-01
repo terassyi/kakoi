@@ -49,7 +49,8 @@ func New(conf *config.Config) ([]Resource, error) {
 	// TODO firewall settings
 
 	// pki settings
-	resources = append(resources, newPki(filepath.Join(conf.WorkDir, "pki"), conf.Service.Network.Vpn.Domain))
+	pki := newPki(filepath.Join(conf.WorkDir, "pki"), conf.Service.Network.Vpn.Domain)
+	resources = append(resources, pki)
 
 	// vpn
 	if vpnAssociatedSubnet == nil {
@@ -59,16 +60,26 @@ func New(conf *config.Config) ([]Resource, error) {
 	if err != nil {
 		return nil, err
 	}
+	vpn.SetPki(pki)
 	resources = append(resources, vpn)
 
 	// server
 	// key pair
-	resources = append(resources, newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.KeyPair))
+	keyPair := newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.KeyPair)
+	resources = append(resources, keyPair)
 
-	// TODO hosts
-	//for _, host := range conf.Service.Servers {
-	//
-	//}
+	// TODO servers
+	for _, server := range conf.Service.Servers {
+		subnet := findSubnet(resources, server.Subnet)
+		if subnet == nil {
+			return nil, fmt.Errorf("target subnet is not found.")
+		}
+		s, err := newServer(server.Name, subnet, keyPair, server.Ports)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, s)
+	}
 
 	return resources, nil
 }

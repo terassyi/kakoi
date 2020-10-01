@@ -1,9 +1,13 @@
 package infra
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/terassyi/kakoi/config"
 	"github.com/terassyi/kakoi/infra/resource"
+	"os"
 	"path/filepath"
 )
 
@@ -74,7 +78,58 @@ func (i *infra) Create() error {
 	if err := i.createCertFiles(); err != nil {
 		return err
 	}
-	//return i.tf.Apply(context.Background())
+	ctx :=  context.Background()
+	err := i.tf.Init(ctx, tfexec.Upgrade(true), tfexec.LockTimeout("60s"))
+	if err != nil {
+		return err
+	}
+	if err := i.tf.Apply(ctx); err != nil {
+		return err
+	}
+
+	if err := i.output(filepath.Join(i.workDir, "output")); err != nil {
+		return err
+	}
+
+	vpn := i.findVpn()
+	if vpn == nil {
+		return fmt.Errorf("vpn resource is not found")
+	}
+	if err := vpn.Create(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *infra) findVpn() *resource.Vpn {
+	for _, r := range i.resources {
+		switch r := r.(type) {
+		case *resource.Vpn:
+			return r
+		}
+	}
+	return nil
+}
+
+func (i *infra) output(outputDir string) error {
+	outputPath := filepath.Join(outputDir, "output.json")
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := i.tf.Output(context.Background())
+	if err != nil {
+		return err
+	}
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	if _, err := file.Write(bytes); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,4 +147,23 @@ func (i *infra) createCertFiles() error {
 		}
 	}
 	return nil
+}
+
+func (i *infra) Destroy() error {
+	if err := i.tf.Destroy(context.Background()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func IsExistWorkDir(path string) (string, error) {
+	if _, err := os.Stat(path); err != nil {
+		return "", err
+	}
+	base := filepath.Dir(path)
+	workDir := filepath.Join(base, ".kakoi")
+	if _, err := os.Stat(workDir); err != nil {
+		return "", err
+	}
+	return workDir, nil
 }

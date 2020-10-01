@@ -180,6 +180,10 @@ func GenerateKeyPair(name, path string) error {
 	if _, err := publicKeyFile.Write(pubKeyBytes); err != nil {
 		return err
 	}
+	// change permission
+	if err := os.Chmod(filepath.Join(path, name) + ".pem", 0700); err != nil {
+		return err
+	}
 	return nil
 }
 
