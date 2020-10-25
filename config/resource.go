@@ -48,5 +48,13 @@ type VpnGateway struct {
 type Server struct {
 	Name   string `yaml:"name"`
 	Subnet string `yaml:"subnet"`
+	Image ServerImage `yaml:"image"`
 	Ports  []int  `yaml:"ports"`
+}
+
+type ServerImage struct {
+	Custom bool `yaml:"custom"`
+	ImagePath string `yaml:"image_path"`
+	ScriptFilePath []string `yaml:"scripts"`
+	InlineScripts []string `yaml:"inline"`
 }
