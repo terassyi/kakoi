@@ -18,10 +18,10 @@ func New(conf *config.Config) ([]Resource, error) {
 	switch conf.Provider.Name {
 	case "aws":
 		resources = append(resources, aws.NewProvider(conf.Provider.Profile, conf.Provider.Region))
+		resources = append(resources, aws.NewS3(conf.Service.Name))
 	default:
 		return nil, fmt.Errorf("unknown provider")
 	}
-
 	// vpc
 	vpc, err := newNetwork(conf.Service.Network.Name, conf.Service.Network.Range, conf.Provider.Region)
 	if err != nil {

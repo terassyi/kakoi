@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	builderDesc string = "instance image for kakoi exercise environment."
+	builderDesc      string = "instance image for kakoi exercise environment."
 	packer_file_name string = "image_builder.json"
 )
 
@@ -51,18 +51,18 @@ func createBuildSpec(path, name string) error {
 
 	type buildSpecPhases struct {
 		PreBuild phase `yaml:"pre_build"`
-		Build phase `yaml:"build"`
+		Build    phase `yaml:"build"`
 	}
 	type buildTemplate struct {
 		Version float32
-		Phases buildSpecPhases
+		Phases  buildSpecPhases
 	}
 
 	buildTempl := buildTemplate{
 		Version: 0.2,
 		Phases: buildSpecPhases{
-			PreBuild: phase{ Commands: build_spec_pre_build_commands},
-			Build:    phase{ Commands: build_spec_build_commands},
+			PreBuild: phase{Commands: build_spec_pre_build_commands},
+			Build:    phase{Commands: build_spec_build_commands},
 		},
 	}
 
@@ -73,15 +73,14 @@ func createBuildSpec(path, name string) error {
 	return ioutil.WriteFile(path, data, 0666)
 }
 
-
 type ImageBuilder struct {
-	Region string
-	Name string
-	Files []string
+	Region   string
+	Name     string
+	Files    []string
 	Commands []string
 }
 
-func newImageBuilder(name, region string, commands, files []string) *ImageBuilder {
+func NewImageBuilder(name, region string, commands, files []string) *ImageBuilder {
 	return &ImageBuilder{
 		Region:   region,
 		Name:     name,
@@ -95,7 +94,7 @@ func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {
 }
 
 type packerBuilder struct {
-	Builders []awsBuilder `json:"builders"`
+	Builders     []awsBuilder  `json:"builders"`
 	Provisioners []provisioner `json:"provisioners"`
 }
 
@@ -109,31 +108,31 @@ func (p *packerBuilder) outputJson(path string) error {
 }
 
 type awsBuilder struct {
-	Type string `json:"type"`
-	Region string `json:"region"`
-	InstanceType string `json:"instance_type"`
-	UserName string `json:"ssh_username"`
-	AmiName string `json:"ami_name"`
-	AmiDescription string `json:"ami_description"`
-	PublicIp bool `json:"associate_public_ip_address"`
-	Filters awsSourceAmiFilter `json:"source_ami_filter"`
+	Type           string             `json:"type"`
+	Region         string             `json:"region"`
+	InstanceType   string             `json:"instance_type"`
+	UserName       string             `json:"ssh_username"`
+	AmiName        string             `json:"ami_name"`
+	AmiDescription string             `json:"ami_description"`
+	PublicIp       bool               `json:"associate_public_ip_address"`
+	Filters        awsSourceAmiFilter `json:"source_ami_filter"`
 }
 
 type awsSourceAmiFilter struct {
-	Filters awsSourceFilterImpl `json:"filters"`
-	MostRecent bool `json:"most_recent"`
-	Owners []string `json:"owners"`
+	Filters    awsSourceFilterImpl `json:"filters"`
+	MostRecent bool                `json:"most_recent"`
+	Owners     []string            `json:"owners"`
 }
 
 type awsSourceFilterImpl struct {
-	Type string `json:"virtualization_type"`
-	Name string `json:"name"`
+	Type           string `json:"virtualization_type"`
+	Name           string `json:"name"`
 	RootDeviceType string `json:"root_device_type"`
 }
 
 type provisioner struct {
-	Type string `json:"type"`
-	Inline []string `json:"inline"`
+	Type    string   `json:"type"`
+	Inline  []string `json:"inline"`
 	Scripts []string `json:"scripts"`
 }
 
@@ -152,7 +151,7 @@ func newPackerBuilder(name, region string, commands, files []string) (*packerBui
 	}
 	return &packerBuilder{
 		Builders:     []awsBuilder{*builder},
-		Provisioners: []provisioner{ *prov },
+		Provisioners: []provisioner{*prov},
 	}, nil
 }
 
@@ -171,9 +170,9 @@ func newAwsBuilder(region, name string) *awsBuilder {
 
 func newAwsSourceFilter() *awsSourceAmiFilter {
 	return &awsSourceAmiFilter{
-		Filters:    awsSourceFilterImpl{
-			Type: "hvm",
-			Name: "amzn-ami*-ebs",
+		Filters: awsSourceFilterImpl{
+			Type:           "hvm",
+			Name:           "amzn-ami*-ebs",
 			RootDeviceType: "ebs",
 		},
 		MostRecent: true,
@@ -184,8 +183,8 @@ func newAwsSourceFilter() *awsSourceAmiFilter {
 func newProvisioner(commands, files []string) (*provisioner, error) {
 	if commands != nil {
 		return &provisioner{
-			Type:    "shell",
-			Inline:  commands,
+			Type:   "shell",
+			Inline: commands,
 		}, nil
 	}
 	if files != nil {
