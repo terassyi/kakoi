@@ -1,24 +1,111 @@
 package resource
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
+	"github.com/goccy/go-yaml"
+	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 const (
 	builderDesc string = "instance image for kakoi exercise environment."
+	packer_file_name string = "image_builder.json"
 )
+
+var (
+	build_spec_pre_build_commands = []string{
+		"echo \"installing hashicorp packer\"",
+		"curl -qL -o packer.zip https://releases.hashicorp.com/packer/1.6.4/packer_1.6.4_linux_amd64.zip && unzip packer.zip",
+		"echo \"installing jq\"",
+		"curl -qL -o jq https://stedolan.github.io/jq/download/linux64/jq && chmod +x ./jq",
+		"echo \"validate packer cofiguration file\"",
+		"./packer validate {{ .Path }}",
+	}
+	build_spec_pre_build_path_index = 5
+
+	build_spec_build_commands = []string{
+		"curl -qL -o aws_credentials.json http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI > aws_credentials.json",
+		"aws configure set region $AWS_REGION",
+		"aws configure set aws_access_key_id `./jq -r '.AccessKeyId' aws_credentials.json`",
+		"aws configure set aws_secret_access_key `./jq -r '.SecretAccessKey' aws_credentials.json`",
+		"aws configure set aws_session_token `./jq -r '.Token' aws_credentials.json`",
+		"echo \"building image\"",
+		"./packer build {{ .Path }}",
+	}
+	build_spec_build_path_index = 6
+
+	buildSpecTemplate = make(map[string]interface{})
+)
+
+func createBuildSpec(path, name string) error {
+	dstPath := filepath.Join(name, packer_file_name)
+	placeHolder := "{{ .Path }}"
+	build_spec_pre_build_commands[build_spec_pre_build_path_index] = strings.Replace(build_spec_pre_build_commands[build_spec_pre_build_path_index], placeHolder, dstPath, -1)
+	build_spec_build_commands[build_spec_build_path_index] = strings.Replace(build_spec_build_commands[build_spec_build_path_index], placeHolder, dstPath, -1)
+
+	type phase struct {
+		Commands []string
+	}
+
+	type buildSpecPhases struct {
+		PreBuild phase `yaml:"pre_build"`
+		Build phase `yaml:"build"`
+	}
+	type buildTemplate struct {
+		Version float32
+		Phases buildSpecPhases
+	}
+
+	buildTempl := buildTemplate{
+		Version: 0.2,
+		Phases: buildSpecPhases{
+			PreBuild: phase{ Commands: build_spec_pre_build_commands},
+			Build:    phase{ Commands: build_spec_build_commands},
+		},
+	}
+
+	data, err := yaml.Marshal(buildTempl)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, data, 0666)
+}
+
 
 type ImageBuilder struct {
 	Region string
 	Name string
-	Scripts []string
+	Files []string
+	Commands []string
+}
+
+func newImageBuilder(name, region string, commands, files []string) *ImageBuilder {
+	return &ImageBuilder{
+		Region:   region,
+		Name:     name,
+		Files:    files,
+		Commands: commands,
+	}
+}
+
+func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {
+	return newPackerBuilder(i.Name, i.Region, i.Commands, i.Files)
 }
 
 type packerBuilder struct {
 	Builders []awsBuilder `json:"builders"`
 	Provisioners []provisioner `json:"provisioners"`
+}
+
+func (p *packerBuilder) outputJson(path string) error {
+	//data, err := json.Marshal(p)
+	data, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, data, 0666)
 }
 
 type awsBuilder struct {
@@ -50,13 +137,13 @@ type provisioner struct {
 	Scripts []string `json:"scripts"`
 }
 
-func NewPackerBuilder(region, name string, commands, files []string) (*packerBuilder, error) {
+func newPackerBuilder(name, region string, commands, files []string) (*packerBuilder, error) {
 	builder := newAwsBuilder(region, name)
 	var filenames []string
 	for _, p := range files {
-		if _, err := os.Stat(p); err != nil {
-			return nil, err
-		}
+		//if _, err := os.Stat(p); err != nil {
+		//	return nil, err
+		//}
 		filenames = append(filenames, filepath.Base(p))
 	}
 	prov, err := newProvisioner(commands, filenames)
@@ -104,7 +191,6 @@ func newProvisioner(commands, files []string) (*provisioner, error) {
 	if files != nil {
 		return &provisioner{
 			Type:    "shell",
-			Inline:  nil,
 			Scripts: files,
 		}, nil
 	}

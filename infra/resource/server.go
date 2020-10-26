@@ -9,10 +9,12 @@ import (
 
 type Server struct {
 	Name string
+	Id string
 	Subnet *Subnet
 	Ports []int
 	KeyPair *KeyPair
 	PrivateIp *net.IP
+	ImageBuilder ImageBuilder
 }
 
 func newServer(name string, subnet *Subnet, key *KeyPair, ports []int) (*Server, error) {
