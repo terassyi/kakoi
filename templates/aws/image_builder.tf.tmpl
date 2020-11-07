@@ -89,6 +89,14 @@ resource "aws_iam_role_policy" "kakoi-{{ .Name }}" {
 	policy = "${data.aws_iam_policy_document.policy-codebuild-ec2.json}"
 }
 
+// cp
+resource "aws_s3_bucket_object" "upload_buildspec" {
+	for_each = fileset("{{ .Name }}/", "*")
+	bucket = "${aws_s3_bucket.kakoi-bucket.id}"
+	key = "{{ .Name }}/${each.value}"
+	source = "{{ .Name }}/${each.value}" // images folder
+}
+
 // build vm image
 resource "aws_codebuild_project" "kakoi-{{ .Name }}-codebuild" {
 	name = "kakoi-{{ .Name }}"

@@ -2,8 +2,8 @@ package resource
 
 import (
 	"fmt"
-	"github.com/terassyi/kakoi/config"
 	"github.com/terassyi/kakoi/infra/aws"
+	"github.com/terassyi/kakoi/infra/state"
 	"path/filepath"
 )
 
@@ -13,7 +13,7 @@ type Resource interface {
 
 const template_path_aws string = "./templates/aws"
 
-func New(conf *config.Config) ([]Resource, error) {
+func New(conf *state.State) ([]Resource, error) {
 	resources := make([]Resource, 0, 100)
 	switch conf.Provider.Name {
 	case "aws":
@@ -65,11 +65,11 @@ func New(conf *config.Config) ([]Resource, error) {
 
 	// server
 	// key pair
-	keyPair := newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.KeyPair)
+	keyPair := newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.Hosts.KeyPair.Name)
 	resources = append(resources, keyPair)
 
 	// TODO servers
-	for _, server := range conf.Service.Servers {
+	for _, server := range conf.Service.Hosts.Servers {
 		subnet := findSubnet(resources, server.Subnet)
 		if subnet == nil {
 			return nil, fmt.Errorf("target subnet is not found.")

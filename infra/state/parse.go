@@ -18,13 +18,13 @@ func NewParser(workDir, path string) (*Parser, error) {
 	}, nil
 }
 
-func (p *Parser) Parse() (*Config, error) {
+func (p *Parser) Parse() (*State, error) {
 	fmt.Println("target path: ", p.targetPath)
 	data, err := ioutil.ReadFile(p.targetPath)
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{
+	config := &State{
 		WorkDir: p.workDir,
 	}
 	if err := yaml.Unmarshal(data, config); err != nil {

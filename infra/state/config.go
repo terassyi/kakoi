@@ -10,6 +10,7 @@ const (
 	kakoi_dir string = ".kakoi"
 	ext_yaml  string = ".yaml"
 	ext_yml   string = ".yml"
+	ext_json string = ".json"
 )
 
 func CreateWorkDir(path string) (string, error) {
@@ -30,12 +31,19 @@ func CreateWorkDir(path string) (string, error) {
 	if err := os.MkdirAll(filepath.Join(workPath, "output"), 0755); err != nil {
 		return "", err
 	}
+	// image files
+	if err := os.MkdirAll(filepath.Join(workPath, "images"), 0755); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(filepath.Join(workPath, "storage"), 0755); err != nil {
+		return "", err
+	}
 	return workPath, nil
 }
 
 func ValidateExtName(file string) error {
 	extName := filepath.Ext(file)
-	if extName != ext_yaml && extName != ext_yml {
+	if extName != ext_yaml && extName != ext_yml && extName != ext_json {
 		return fmt.Errorf("config file must be .yaml of .yml format: %s", file)
 	}
 	return nil

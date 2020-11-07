@@ -1,9 +1,9 @@
-package config
+package state
 
 import "testing"
 
 func TestParser_Parse(t *testing.T) {
-	p, _ := NewParser("", "../examples/example.yml")
+	p, _ := NewParser("", "../../examples/example.yml")
 	c, err := p.Parse()
 	if err != nil {
 		t.Fatal(err)
@@ -23,10 +23,10 @@ func TestParser_Parse(t *testing.T) {
 	if c.Service.Network.Subnets[0].Name != "subnet1" {
 		t.Fatal("not match network.subnet[0].name")
 	}
-	if len(c.Service.Servers) != 2 {
-		t.Fatalf("not match number of servers: actual %d", len(c.Service.Servers))
+	if len(c.Service.Hosts.Servers) != 2 {
+		t.Fatalf("not match number of servers: actual %d", len(c.Service.Hosts.Servers))
 	}
-	if c.Service.Servers[0].Name != "example-host1" {
+	if c.Service.Hosts.Servers[0].Name != "example-host1" {
 		t.Fatal("not match servers[0].name")
 	}
 }
