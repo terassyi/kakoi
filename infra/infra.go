@@ -5,21 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/terassyi/kakoi/config"
 	"github.com/terassyi/kakoi/infra/resource"
+	"github.com/terassyi/kakoi/infra/state"
 	"os"
 	"path/filepath"
 )
 
 type Infrastructure interface {
+	Name() string
 	WorkDir() string
 	Provider() string
-	Build() error
+	//Build() error
 	Create() error
 }
 
 type infra struct {
 	*builder
+	name string
 	workDir  string
 	provider string
 }
@@ -27,14 +29,14 @@ type infra struct {
 func New(path string) (Infrastructure, error) {
 	fmt.Println("path: ", path)
 	dir, file := filepath.Split(path)
-	if err := config.ValidateExtName(file); err != nil {
+	if err := validateExtName(file); err != nil {
 		return nil, err
 	}
-	workDir, err := config.CreateWorkDir(dir)
+	workDir, err := state.CreateWorkDir(dir)
 	if err != nil {
 		return nil, err
 	}
-	parser, err := config.NewParser(workDir, path)
+	parser, err := state.NewParser(workDir, path)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +50,7 @@ func New(path string) (Infrastructure, error) {
 	}
 	return &infra{
 		builder:  builder,
+		name: conf.Service.Name,
 		workDir:  workDir,
 		provider: conf.Provider.Name,
 	}, nil
@@ -61,18 +64,12 @@ func (i *infra) Provider() string {
 	return i.provider
 }
 
-func (i *infra) Build() error {
-	// build template file
-	for _, b := range i.resources {
-		if err := b.BuildTemplate(i.workDir); err != nil {
-			return err
-		}
-	}
-	return nil
+func (i *infra) Name() string {
+	return i.name
 }
 
 func (i *infra) Create() error {
-	if err := i.Build(); err != nil {
+	if err := i.buildTemplate(); err != nil {
 		return err
 	}
 	if err := i.createCertFiles(); err != nil {
@@ -87,7 +84,7 @@ func (i *infra) Create() error {
 		return err
 	}
 
-	if err := i.output(filepath.Join(i.workDir, "output")); err != nil {
+	if err := i.Output(filepath.Join(i.workDir, "output")); err != nil {
 		return err
 	}
 
@@ -111,7 +108,7 @@ func (i *infra) findVpn() *resource.Vpn {
 	return nil
 }
 
-func (i *infra) output(outputDir string) error {
+func (i *infra) Output(outputDir string) error {
 	outputPath := filepath.Join(outputDir, "output.json")
 	file, err := os.Create(outputPath)
 	if err != nil {
@@ -119,11 +116,11 @@ func (i *infra) output(outputDir string) error {
 	}
 	defer file.Close()
 
-	data, err := i.tf.Output(context.Background())
+	data, err := i.output()
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(data)
+	bytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -150,10 +147,7 @@ func (i *infra) createCertFiles() error {
 }
 
 func (i *infra) Destroy() error {
-	if err := i.tf.Destroy(context.Background()); err != nil {
-		return err
-	}
-	return nil
+	return i.destroy()
 }
 
 func IsExistWorkDir(path string) (string, error) {
@@ -166,4 +160,12 @@ func IsExistWorkDir(path string) (string, error) {
 		return "", err
 	}
 	return workDir, nil
+}
+
+func validateExtName(file string) error {
+	extName := filepath.Ext(file)
+	if extName != ext_yaml && extName != ext_yml && extName != ext_json {
+		return fmt.Errorf("config file must be .yaml of .yml format: %s", file)
+	}
+	return nil
 }

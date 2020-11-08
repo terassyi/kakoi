@@ -68,6 +68,7 @@ type Hosts struct {
 
 type Server struct {
 	Name   string `json:"name"`
+	Size string `json:"size"`
 	Number int `json:"number"` // default 1
 	Subnet string `json:"subnet"`
 	Image ServerImage `json:"image"`

@@ -5,6 +5,7 @@ import (
 	"github.com/terassyi/kakoi/infra/aws"
 	"github.com/terassyi/kakoi/infra/state"
 	"path/filepath"
+	"strconv"
 )
 
 type Resource interface {
@@ -74,11 +75,21 @@ func New(conf *state.State) ([]Resource, error) {
 		if subnet == nil {
 			return nil, fmt.Errorf("target subnet is not found.")
 		}
-		s, err := newServer(server.Name, subnet, keyPair, server.Ports)
-		if err != nil {
-			return nil, err
+		if server.Number == 0 {
+			server.Number += 1
 		}
-		resources = append(resources, s)
+		for i := 0; i < server.Number; i++ {
+			name := server.Name + "-" + strconv.Itoa(i)
+			s, err := newServer(name, server.Size, subnet, keyPair, server.Ports)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println("server name=", name)
+			image := NewImage(server.Image.Id, server.Image.ImagePath)
+			s.SetImage(image)
+			resources = append(resources, s)
+		}
+
 	}
 
 	return resources, nil

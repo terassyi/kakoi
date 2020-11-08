@@ -37,6 +37,9 @@ service:
     servers:
       - name: "example-host1"
         subnet: "subnet1"
+        size: "t2.micro"
+        image:
+          id: "ami-0fae54fcdf2975a50"
         ports:
           - 80
           - 22
@@ -45,6 +48,8 @@ service:
       - name: "example-host2"
         subnet: "subnet2"
         number: 2
+        image:
+          id: "ami-0e7192738fc977648"
         port:
           - 80
           - 22

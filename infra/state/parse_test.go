@@ -1,6 +1,8 @@
 package state
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestParser_Parse(t *testing.T) {
 	p, _ := NewParser("", "../../examples/example.yml")
@@ -28,5 +30,14 @@ func TestParser_Parse(t *testing.T) {
 	}
 	if c.Service.Hosts.Servers[0].Name != "example-host1" {
 		t.Fatal("not match servers[0].name")
+	}
+	if c.Service.Hosts.Servers[0].Size != "t2.micro" {
+		t.Fatal("not match servers[0].size")
+	}
+	if c.Service.Hosts.Servers[1].Image.Id != "ami-0e7192738fc977648" {
+		t.Fatal("not match server[1].name")
+	}
+	if c.Service.Hosts.Servers[1].Number != 2 {
+		t.Fatal("not match server[1].number")
 	}
 }
