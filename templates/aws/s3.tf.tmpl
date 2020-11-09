@@ -6,3 +6,11 @@ resource "aws_s3_bucket" "kakoi-bucket" {
 		Name = "kakoi-{{ .Name }}"
 	}
 }
+
+output "kakoi-bucket-id" {
+	value = "${ aws_s3_bucket.kakoi-bucket.id }"
+}
+
+output "kakoi-bucket-domain" {
+	value = "${ aws_s3_bucket.kakoi-bucket.bucket_domain_name }"
+}

@@ -123,5 +123,5 @@ resource "aws_codebuild_project" "kakoi-{{ .Name }}-codebuild" {
           group_name  = "log-group"
           stream_name = "kakoi-{{ .Name }}-log-stream"
         }
-
+	}
 }

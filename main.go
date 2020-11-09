@@ -13,8 +13,10 @@ func main() {
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
 
+	subcommands.Register(&cmd.Init{}, "internal")
 	subcommands.Register(&cmd.Create{}, "infra")
 	subcommands.Register(&cmd.Destroy{}, "infra")
+
 
 	flag.Parse()
 	ctx := context.Background()
