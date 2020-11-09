@@ -30,19 +30,27 @@ service:
       domain: "example.kakoi.terrasyi.net"
       associated_subnet: "subnet1"
 
-  servers:
-    - name: "example-host1"
-      subnet: "subnet1"
-      ports:
-        - 80
-        - 22
-        - 443
+  hosts:
+    key:
+      name: "example-kakoi-key"
 
-    - name: "example-host2"
-      subnet: "subnet2"
-      port:
-        - 80
-        - 22
-        - 8080
+    servers:
+      - name: "example-host1"
+        subnet: "subnet1"
+        size: "t2.micro"
+        image:
+          id: "ami-0fae54fcdf2975a50"
+        ports:
+          - 80
+          - 22
+          - 443
 
-  key_pair_name: "example-kakoi-key"
+      - name: "example-host2"
+        subnet: "subnet2"
+        number: 2
+        image:
+          id: "ami-0e7192738fc977648"
+        port:
+          - 80
+          - 22
+          - 8080

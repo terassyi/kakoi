@@ -2,7 +2,6 @@ package resource
 
 import (
 	"encoding/json"
-	"github.com/hashicorp/terraform-exec/tfexec"
 	"net"
 	"os"
 	"path/filepath"
@@ -168,7 +167,7 @@ func (v *Vpn) createOvpnConfig() error {
 	if err != nil {
 		return err
 	}
-	outputData := make(map[string]tfexec.OutputMeta)
+	outputData := make(map[string]string)
 	if err := json.Unmarshal(bytes[:l], &outputData); err != nil {
 		return err
 	}

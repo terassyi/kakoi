@@ -1,0 +1,40 @@
+{
+    "builders": [
+    {
+	"type": "amazon-ebs",
+	"region": "{{ .Region }}",
+	"instance_type": "t2.micro",
+	"ssh_username": "ec2-user",
+	"ami_name": "kakoi-{{ .Name }}",
+	"ami_description": "instance image for kakoi exercise environment.",
+	"associate_public_ip_address": true,
+	"source_ami_filter": {
+	    "filters": {
+		"virtualization-type": "hvm",
+		"name": "amzn-ami*-ebs",
+                "root-device-type": "ebs"
+		},
+		"most_recent": true,
+		"owners": ["137112412989"]
+	}
+    }
+    ],
+	"provisioners": [
+	{
+	"type": "shell",
+	"inline": [
+	    "sudo yum -y update",
+	    "sudo yum -y install git docker",
+	    "sudo service docker start",
+	    "sudo usermod -a -G docker ec2-user",
+	    "sudo curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/bin/docker-compose",
+	    "sudo chmod +x /usr/bin/docker-compose",
+		"git clone https://github.com/terassyi/mini-metasploitable.git",
+		"cd mini-metasploitable",
+		"git pull origin meta",
+		"git checkout meta",
+	    "sudo docker-compose up -d"
+	]
+	}
+	]
+}

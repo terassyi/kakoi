@@ -7,22 +7,40 @@ import (
 	"path/filepath"
 )
 
+const (
+	aws_default_image_id = "ami-0cc75a8978fbbc969"
+	aws_default_size = "t3.micro"
+)
+
 type Server struct {
 	Name string
+	Image *Image
+	Size string
 	Subnet *Subnet
 	Ports []int
 	KeyPair *KeyPair
 	PrivateIp *net.IP
+	ImageBuilder ImageBuilder
 }
 
-func newServer(name string, subnet *Subnet, key *KeyPair, ports []int) (*Server, error) {
-	return &Server{
+func newServer(name, size string, subnet *Subnet, key *KeyPair, ports []int) (*Server, error) {
+	s := &Server{
 		Name:      name,
+		Size: size,
 		Subnet:    subnet,
 		Ports:     ports,
 		KeyPair:   key,
 		PrivateIp: nil,
-	}, nil
+	}
+	if size == "" {
+		s.Size = aws_default_size
+	} else {
+		s.Size = size
+	}
+	return s, nil
+}
+func (s *Server) SetImage(image *Image) {
+	s.Image = image
 }
 
 func (s *Server) BuildTemplate(workDir string) error {
@@ -37,4 +55,20 @@ func (s *Server) BuildTemplate(workDir string) error {
 		return err
 	}
 	return t.Execute(file, s)
+}
+
+type Image struct {
+	Id string
+	Path string
+}
+
+func NewImage(id, path string) *Image {
+	image := &Image{}
+	if id == "" {
+		image.Id = aws_default_image_id
+	} else {
+		image.Id = id
+	}
+	image.Path = path
+	return image
 }

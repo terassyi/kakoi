@@ -2,9 +2,10 @@ package resource
 
 import (
 	"fmt"
-	"github.com/terassyi/kakoi/config"
 	"github.com/terassyi/kakoi/infra/aws"
+	"github.com/terassyi/kakoi/infra/state"
 	"path/filepath"
+	"strconv"
 )
 
 type Resource interface {
@@ -13,15 +14,15 @@ type Resource interface {
 
 const template_path_aws string = "./templates/aws"
 
-func New(conf *config.Config) ([]Resource, error) {
+func New(conf *state.State) ([]Resource, error) {
 	resources := make([]Resource, 0, 100)
 	switch conf.Provider.Name {
 	case "aws":
 		resources = append(resources, aws.NewProvider(conf.Provider.Profile, conf.Provider.Region))
+		resources = append(resources, aws.NewS3(conf.Service.Name))
 	default:
 		return nil, fmt.Errorf("unknown provider")
 	}
-
 	// vpc
 	vpc, err := newNetwork(conf.Service.Network.Name, conf.Service.Network.Range, conf.Provider.Region)
 	if err != nil {
@@ -65,20 +66,30 @@ func New(conf *config.Config) ([]Resource, error) {
 
 	// server
 	// key pair
-	keyPair := newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.KeyPair)
+	keyPair := newKeyPair(filepath.Join(conf.WorkDir, "keys"), conf.Service.Hosts.KeyPair.Name)
 	resources = append(resources, keyPair)
 
 	// TODO servers
-	for _, server := range conf.Service.Servers {
+	for _, server := range conf.Service.Hosts.Servers {
 		subnet := findSubnet(resources, server.Subnet)
 		if subnet == nil {
 			return nil, fmt.Errorf("target subnet is not found.")
 		}
-		s, err := newServer(server.Name, subnet, keyPair, server.Ports)
-		if err != nil {
-			return nil, err
+		if server.Number == 0 {
+			server.Number += 1
 		}
-		resources = append(resources, s)
+		for i := 0; i < server.Number; i++ {
+			name := server.Name + "-" + strconv.Itoa(i)
+			s, err := newServer(name, server.Size, subnet, keyPair, server.Ports)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println("server name=", name)
+			image := NewImage(server.Image.Id, server.Image.ImagePath)
+			s.SetImage(image)
+			resources = append(resources, s)
+		}
+
 	}
 
 	return resources, nil

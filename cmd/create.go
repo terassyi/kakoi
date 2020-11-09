@@ -37,5 +37,5 @@ func (c *Create) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 	if err := i.Create(); err != nil {
 		fmt.Println(err)
 	}
-	return subcommands.ExitFailure
+	return subcommands.ExitSuccess
 }
