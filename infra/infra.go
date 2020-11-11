@@ -27,20 +27,7 @@ type infra struct {
 }
 
 func New(path string) (Infrastructure, error) {
-	fmt.Println("path: ", path)
-	dir, file := filepath.Split(path)
-	if err := validateExtName(file); err != nil {
-		return nil, err
-	}
-	workDir, err := state.CreateWorkDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	parser, err := state.NewParser(workDir, path)
-	if err != nil {
-		return nil, err
-	}
-	conf, err := parser.Parse()
+	conf, workDir, err := parse(path)
 	if err != nil {
 		return nil, err
 	}
@@ -168,4 +155,53 @@ func validateExtName(file string) error {
 		return fmt.Errorf("config file must be .yaml of .yml format: %s", file)
 	}
 	return nil
+}
+
+func isFileSpecified(path string) bool {
+	if err := validateExtName(path); err != nil {
+		return false
+	}
+	return true
+}
+
+func isExistStateFile(path string) bool {
+	workDir, err := IsExistWorkDir(path)
+	if err != nil {
+		return false
+	}
+	if _, err := os.Stat(filepath.Join(workDir, kakoi_state)); err != nil {
+		return false
+	}
+	return true
+}
+
+func parse(path string) (*state.State, string, error) {
+	if isFileSpecified(path) {
+		workDir, err := createWorkDir(filepath.Base(path))
+		if err != nil {
+			return nil, "", err
+		}
+		parser, err := state.NewParser(workDir, path)
+		if err != nil {
+			return nil, "", err
+		}
+		s, err := parser.Parse()
+		if err != nil {
+			return nil, "", err
+		}
+		return s, workDir, nil
+	}
+	if !isExistStateFile(filepath.Join(path, kakoi_dir)) {
+		return nil, "", fmt.Errorf("kakoi.state is not found")
+	}
+	workDir := filepath.Join(path, kakoi_dir)
+	parser, err := state.NewParser(workDir, filepath.Join(workDir, kakoi_state))
+	if err != nil {
+		return nil, "", err
+	}
+	s, err := parser.Parse()
+	if err != nil {
+		return nil, "", err
+	}
+	return s, workDir, nil
 }
