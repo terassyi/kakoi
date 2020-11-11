@@ -19,7 +19,7 @@ func New(conf *state.State) ([]Resource, error) {
 	switch conf.Provider.Name {
 	case "aws":
 		resources = append(resources, aws.NewProvider(conf.Provider.Profile, conf.Provider.Region))
-		resources = append(resources, aws.NewS3(conf.Service.Name))
+		//resources = append(resources, aws.NewS3(conf.Service.Name))
 	default:
 		return nil, fmt.Errorf("unknown provider")
 	}

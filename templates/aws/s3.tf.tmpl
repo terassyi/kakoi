@@ -1,8 +1,18 @@
 // s3 bucket
 resource "aws_s3_bucket" "kakoi-bucket" {
 	bucket = "kakoi.{{ .Name }}"
-	acl = "private"
+	// acl = "private"
+	// acl = "aws-exec-read"
+	acl = "public-read"
 	tags = {
 		Name = "kakoi-{{ .Name }}"
 	}
+}
+
+output "kakoi-bucket-id" {
+	value = "${ aws_s3_bucket.kakoi-bucket.id }"
+}
+
+output "kakoi-bucket-domain" {
+	value = "${ aws_s3_bucket.kakoi-bucket.bucket_domain_name }"
 }

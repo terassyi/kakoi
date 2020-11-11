@@ -9,7 +9,7 @@ import (
 
 const (
 	aws_default_image_id = "ami-0cc75a8978fbbc969"
-	aws_default_size = "t3.micro"
+	aws_default_size = "t2.micro"
 )
 
 type Server struct {
