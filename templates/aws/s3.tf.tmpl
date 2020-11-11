@@ -1,7 +1,9 @@
 // s3 bucket
 resource "aws_s3_bucket" "kakoi-bucket" {
 	bucket = "kakoi.{{ .Name }}"
-	acl = "private"
+	// acl = "private"
+	// acl = "aws-exec-read"
+	acl = "public-read"
 	tags = {
 		Name = "kakoi-{{ .Name }}"
 	}

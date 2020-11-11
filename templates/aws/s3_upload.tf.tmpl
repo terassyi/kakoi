@@ -1,0 +1,7 @@
+// file upload
+resource "aws_s3_bucket_object" "upload-{{ .Name }}" {
+	bucket = "${aws_s3_bucket.kakoi-bucket.id}"
+	acl = "public-read"
+	key = "{{ .Key }}"
+	source = "{{ .Src }}"
+}

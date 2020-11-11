@@ -63,7 +63,7 @@ type KeyPair struct {
 
 type Hosts struct {
 	KeyPair KeyPair `json:"key"`
-	Servers []Server `json:"servers"`
+	Servers []*Server `json:"servers"`
 }
 
 type Server struct {
@@ -71,7 +71,7 @@ type Server struct {
 	Size string `json:"size"`
 	Number int `json:"number"` // default 1
 	Subnet string `json:"subnet"`
-	Image ServerImage `json:"image"`
+	Image *ServerImage `json:"image"`
 	Status string `json:"status"` // automatically generated
 	Ports  []int  `json:"ports"`
 }
