@@ -59,8 +59,11 @@ func (i *infra) Create() error {
 	if err := i.buildTemplate(); err != nil {
 		return err
 	}
-	if err := i.createCertFiles(); err != nil {
-		return err
+	// TODO
+	if _, err := os.Stat("kakoi.ovpn"); err != nil {
+		if err := i.createCertFiles(); err != nil {
+			return err
+		}
 	}
 	ctx :=  context.Background()
 	err := i.tf.Init(ctx, tfexec.Upgrade(true), tfexec.LockTimeout("60s"))
@@ -79,9 +82,9 @@ func (i *infra) Create() error {
 	if vpn == nil {
 		return fmt.Errorf("vpn resource is not found")
 	}
-	if err := vpn.Create(); err != nil {
-		return err
-	}
+	//if err := vpn.Create(); err != nil {
+	//	return err
+	//}
 	return nil
 }
 
