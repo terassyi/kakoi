@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-yaml"
+	"html/template"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -70,7 +72,7 @@ func createBuildSpec(path, name string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, data, 0666)
+	return ioutil.WriteFile(filepath.Join(path, "buildspec.yml"), data, 0666)
 }
 
 type ImageBuilder struct {
@@ -87,6 +89,39 @@ func NewImageBuilder(name, region string, commands, files []string) *ImageBuilde
 		Files:    files,
 		Commands: commands,
 	}
+}
+
+func (i *ImageBuilder) BuildTemplate(workDir string) error {
+	fileName := "image_builder-" + i.Name + ".tf"
+
+	// create buildspec and packer config file
+	packer, err := i.createPackerBuilder()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(workDir, "images", i.Name)
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+
+	if err := packer.outputJson(filepath.Join(path, packer_file_name)); err != nil {
+		fmt.Println("json")
+		return err
+	}
+	if err := createBuildSpec(path, i.Name); err != nil {
+		fmt.Println("buildspec")
+		return err
+	}
+	file, err := os.Create(filepath.Join(workDir, "images", fileName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	t, err := template.New("image_builder.tf.tmpl").ParseFiles("../../templates/aws/image_builder.tf.tmpl")
+	if err != nil {
+		return err
+	}
+	return t.Execute(file, i)
 }
 
 func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {

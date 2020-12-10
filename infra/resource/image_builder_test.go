@@ -3,7 +3,7 @@ package resource
 import "testing"
 
 func newImageBuilderTest() *ImageBuilder {
-	return newImageBuilder("test", "test-region", nil, []string{"hoge1.sh", "hoge2.sh"})
+	return NewImageBuilder("test2", "test-region", nil, []string{"hoge1.sh", "hoge2.sh"})
 }
 
 func TestPackerBuilder_outputJson(t *testing.T) {
@@ -19,6 +19,13 @@ func TestPackerBuilder_outputJson(t *testing.T) {
 
 func TestCreateBuildSpec(t *testing.T) {
 	if err := createBuildSpec("../../test/output/buildspec.yml", "test"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestImageBuilder_BuildTemplate(t *testing.T) {
+	ib := newImageBuilderTest()
+	if err := ib.BuildTemplate("../../examples/.kakoi"); err != nil {
 		t.Fatal(err)
 	}
 }
