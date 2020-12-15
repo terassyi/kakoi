@@ -1,9 +1,28 @@
 package resource
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func newImageBuilderTest() *ImageBuilder {
-	return NewImageBuilder("test2", "test-region", nil, []string{"hoge1.sh", "hoge2.sh"})
+	ib, _ := NewImageBuilder("test2", "test-region", "~/example/.kakoi", nil, []string{"hoge1.sh", "hoge2.sh"})
+	return ib
+}
+
+func TestNewImageBuilder(t *testing.T) {
+	ib := newImageBuilderTest()
+	if ib.Name != "test2" {
+		t.Fatalf("not match image builder name")
+	}
+	if ib.Region != "test-region" {
+		t.Fatalf("not match image builder region")
+	}
+	wd, _ := os.Getwd()
+	if ib.BuildSpecPath != filepath.Join(wd, ".kakoi", "images") {
+		t.Fatalf("not match work path")
+	}
 }
 
 func TestPackerBuilder_outputJson(t *testing.T) {

@@ -14,6 +14,7 @@ import (
 const (
 	builderDesc      string = "instance image for kakoi exercise environment."
 	packer_file_name string = "image_builder.json"
+	kakoi_dir string = ".kakoi"
 )
 
 var (
@@ -42,10 +43,10 @@ var (
 )
 
 func createBuildSpec(path, name string) error {
-	dstPath := filepath.Join(name, packer_file_name)
+	//dstPath := filepath.Join(name, packer_file_name)
 	placeHolder := "{{ .Path }}"
-	build_spec_pre_build_commands[build_spec_pre_build_path_index] = strings.Replace(build_spec_pre_build_commands[build_spec_pre_build_path_index], placeHolder, dstPath, -1)
-	build_spec_build_commands[build_spec_build_path_index] = strings.Replace(build_spec_build_commands[build_spec_build_path_index], placeHolder, dstPath, -1)
+	build_spec_pre_build_commands[build_spec_pre_build_path_index] = strings.Replace(build_spec_pre_build_commands[build_spec_pre_build_path_index], placeHolder, packer_file_name, -1)
+	build_spec_build_commands[build_spec_build_path_index] = strings.Replace(build_spec_build_commands[build_spec_build_path_index], placeHolder, packer_file_name, -1)
 
 	type phase struct {
 		Commands []string
@@ -80,15 +81,19 @@ type ImageBuilder struct {
 	Name     string
 	Files    []string
 	Commands []string
+	BuildSpecPath string
+	ScriptsBase string
 }
 
-func NewImageBuilder(name, region string, commands, files []string) *ImageBuilder {
+func NewImageBuilder(name, region, base string, commands, files []string) (*ImageBuilder, error) {
 	return &ImageBuilder{
 		Region:   region,
 		Name:     name,
 		Files:    files,
 		Commands: commands,
-	}
+		BuildSpecPath: filepath.Join(base, "images"),
+		ScriptsBase: base[:len(base)-7],
+	}, nil
 }
 
 func (i *ImageBuilder) BuildTemplate(workDir string) error {
@@ -112,12 +117,12 @@ func (i *ImageBuilder) BuildTemplate(workDir string) error {
 		fmt.Println("buildspec")
 		return err
 	}
-	file, err := os.Create(filepath.Join(workDir, "images", fileName))
+	file, err := os.Create(filepath.Join(workDir, fileName))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("image_builder.tf.tmpl").ParseFiles("../../templates/aws/image_builder.tf.tmpl")
+	t, err := template.New("image_builder.tf.tmpl").ParseFiles("templates/aws/image_builder.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -160,9 +165,9 @@ type awsSourceAmiFilter struct {
 }
 
 type awsSourceFilterImpl struct {
-	Type           string `json:"virtualization_type"`
+	Type           string `json:"virtualization-type"`
 	Name           string `json:"name"`
-	RootDeviceType string `json:"root_device_type"`
+	RootDeviceType string `json:"root-device-type"`
 }
 
 type provisioner struct {
