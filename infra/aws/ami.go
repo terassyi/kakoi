@@ -94,13 +94,12 @@ func checkImportImageOutput(out *ec2.ImportImageTask) (string, bool, error) {
 	return "", false, nil
 }
 
-func WaitImageBuildResult(profile string, buildIds []string) (interface{}, error) {
+func WaitImageBuildResult(profile string, buildIds map[string]string) (interface{}, error) {
 	errCh := make(chan error)
 	timer := time.NewTicker(time.Minute)
 	go func() {
 		for {
 			<-timer.C
-			fmt.Println("[INFO] checking for image building status")
 			out, err := getBuildStatus(profile, buildIds)
 			if err != nil {
 				errCh <- err
@@ -112,7 +111,7 @@ func WaitImageBuildResult(profile string, buildIds []string) (interface{}, error
 				return
 			}
 			if res {
-				fmt.Println("[INFO] finished building images")
+				errCh <- nil
 				return
 			}
 		}
@@ -121,10 +120,11 @@ func WaitImageBuildResult(profile string, buildIds []string) (interface{}, error
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("[INFO] finished building images")
 	return nil, nil
 }
 
-func getBuildStatus(profile string, buildIds []string) (*codebuild.BatchGetBuildsOutput, error) {
+func getBuildStatus(profile string, buildIds map[string]string) (*codebuild.BatchGetBuildsOutput, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile:           profile,
 		SharedConfigState: session.SharedConfigEnable,
@@ -151,10 +151,17 @@ func getBuildStatus(profile string, buildIds []string) (*codebuild.BatchGetBuild
 func checkBuildStatus(res *codebuild.BatchGetBuildsOutput) (bool, error) {
 	status := false
 	for _, build := range res.Builds {
-		if *build.BuildStatus == "SUCCEEDED" && *build.CurrentPhase == "COMPLETED" {
+		statusMessage := *build.BuildStatus
+		phase := *build.CurrentPhase
+		fmt.Printf("[INFO] (%v)%v is %v\n", phase, *build.Id, statusMessage)
+		if phase == "COMPLETED" {
 			status = true
+			return status, nil
 		} else {
 			status = false
+		}
+		if statusMessage == "FAILED" || phase == "FAULT" {
+			return false, fmt.Errorf("build failed")
 		}
 	}
 	return status, nil

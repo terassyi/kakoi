@@ -10,6 +10,7 @@ import (
 	"github.com/terassyi/kakoi/infra/state"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -95,20 +96,43 @@ func (i *initializer) init() error {
 
 func (i *initializer) buildImage() error {
 	// trigger codebuild image build
-	var buildIds []string
+	buildIds := make(map[string]string)
 	for _, s := range i.conf.Service.Hosts.Servers {
 		if s.Image.ScriptFilePath != nil {
 			id, err := i.startBuildImage(kakoi_simbol + s.Name)
 			if err != nil {
 				return err
 			}
-			buildIds = append(buildIds, id)
+			buildIds[s.Name] = id
 		}
 	}
 	// wait
 	_, err := aws.WaitImageBuildResult(i.conf.Provider.Profile, buildIds)
 	if err != nil {
 		return err
+	}
+	// logs
+	imageIdMap := make(map[string]string)
+	for name, buildId := range buildIds {
+		id := strings.Split(buildId, ":")[1]
+		logs, err := aws.GetLog(i.workDir, i.conf.Provider.Profile, name, "build", id)
+		if err != nil {
+			return err
+		}
+		imageId, err := i.getImageIdFromLog(logs)
+		if err != nil {
+			return err
+		}
+		imageIdMap[name] = imageId
+	}
+	for _, s := range i.conf.Service.Hosts.Servers {
+		id, ok := imageIdMap[s.Name]
+		if ok {
+			if s.Image.Id == "" {
+				s.Image.Id = id
+				fmt.Printf("[INFO] %v's image id is %v\n", s.Name, id)
+			}
+		}
 	}
 	return nil
 }
@@ -246,6 +270,9 @@ func createWorkDir(path string) (string, error) {
 	if err := os.MkdirAll(filepath.Join(workPath, "storage"), 0755); err != nil {
 		return "", err
 	}
+	if err := os.MkdirAll(filepath.Join(workPath, "log"), 0755); err != nil {
+		return "", err
+	}
 	return workPath, nil
 }
 
@@ -280,4 +307,16 @@ func absWorkDir(workDir string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(wd, workDir), nil
+}
+
+func (i *initializer) getImageIdFromLog(logs []string) (string, error) {
+	const createdMessage = "amazon-ebs: AMIs were created:"
+	for i := 0; i < len(logs); i++ {
+		if strings.Contains(logs[i], createdMessage) {
+			idTmp := strings.Split(logs[i+1], ": ")[1]
+			id := strings.Split(idTmp, "\n")[0]
+			return id, nil
+		}
+	}
+	return "", fmt.Errorf("image id is not found in logs")
 }

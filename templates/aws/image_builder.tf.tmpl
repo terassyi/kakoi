@@ -128,8 +128,8 @@ resource "aws_codebuild_project" "kakoi-{{ .Name }}-codebuild" {
 
     logs_config {
         cloudwatch_logs {
-          group_name  = "log-group"
-          stream_name = "kakoi-{{ .Name }}-log-stream"
+          group_name  = "kakoi"
+          stream_name = "kakoi-{{ .Name }}-build"
         }
 	}
 }
