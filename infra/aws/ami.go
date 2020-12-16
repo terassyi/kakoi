@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"time"
 )
 
-func WaitImportImageResult(profile string, ids map[string]string) (map[string]string, error){
+func WaitImportImageResult(profile string, ids map[string]string) (map[string]string, error) {
 	var idsPtr []*string
 	taskIdImageIdMap := make(map[string]string)
 	for k, _ := range ids {
 		idsPtr = append(idsPtr, aws.String(ids[k]))
 	}
 
-	fmt.Println("ids ptr", idsPtr)
 	errCh := make(chan error)
 	counter := 0
 	timer := time.NewTicker(time.Minute)
-	go func(){
+	go func() {
 		for {
 			<-timer.C
 			fmt.Println("[INFO] checking for building status")
@@ -50,7 +50,7 @@ func WaitImportImageResult(profile string, ids map[string]string) (map[string]st
 		}
 	}()
 
-	err := <- errCh
+	err := <-errCh
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +91,108 @@ func checkImportImageOutput(out *ec2.ImportImageTask) (string, bool, error) {
 		return "", false, nil
 	}
 
-
 	return "", false, nil
+}
+
+func WaitImageBuildResult(profile string, buildIds []string) (interface{}, error) {
+	errCh := make(chan error)
+	timer := time.NewTicker(time.Minute)
+	go func() {
+		for {
+			<-timer.C
+			fmt.Println("[INFO] checking for image building status")
+			out, err := getBuildStatus(profile, buildIds)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			res, err := checkBuildStatus(out)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			if res {
+				fmt.Println("[INFO] finished building images")
+				return
+			}
+		}
+	}()
+	err := <-errCh
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func getBuildStatus(profile string, buildIds []string) (*codebuild.BatchGetBuildsOutput, error) {
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Profile:           profile,
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		return nil, err
+	}
+	cb := codebuild.New(sess)
+	var ids []*string
+	for _, id := range buildIds {
+		ids = append(ids, aws.String(id))
+	}
+
+	// get build project
+	res, err := cb.BatchGetBuilds(&codebuild.BatchGetBuildsInput{
+		Ids: ids,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func checkBuildStatus(res *codebuild.BatchGetBuildsOutput) (bool, error) {
+	status := false
+	for _, build := range res.Builds {
+		if *build.BuildStatus == "SUCCEEDED" && *build.CurrentPhase == "COMPLETED" {
+			status = true
+		} else {
+			status = false
+		}
+	}
+	return status, nil
+}
+
+func StartBuild(profile, projectName string) (string, error) {
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Profile:           profile,
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		return "", err
+	}
+	cb := codebuild.New(sess)
+	startRes, err := cb.StartBuild(&codebuild.StartBuildInput{
+		ProjectName: aws.String(projectName),
+	})
+	buildId := *startRes.Build.Id
+	return buildId, nil
+}
+
+func DeleteImage(profile string, imageIds []*string) error {
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Profile:           profile,
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		return err
+	}
+	ins := ec2.New(sess)
+	for _, id := range imageIds {
+		_, err := ins.DeregisterImage(&ec2.DeregisterImageInput{
+			DryRun:  nil,
+			ImageId: id,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

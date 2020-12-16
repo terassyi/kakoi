@@ -1,0 +1,68 @@
+package infra
+
+import (
+	"context"
+	"fmt"
+	awsSdk "github.com/aws/aws-sdk-go/aws"
+	"github.com/terassyi/kakoi/infra/aws"
+	"github.com/terassyi/kakoi/infra/state"
+	"github.com/terassyi/kakoi/infra/terraform"
+	"path/filepath"
+)
+
+type Destroyer interface {
+	Destroy() error
+}
+
+type destroyer struct {
+	workDir string
+	conf    *state.State
+}
+
+func NewDestroyer(path string) (Destroyer, error) {
+	if !isExistStateFile(path) {
+		return nil, fmt.Errorf("[ERROR] state file is not found")
+	}
+	base := filepath.Base(path)
+	parser, err := state.NewParser(base, path)
+	if err != nil {
+		return nil, err
+	}
+	s, err := parser.Parse()
+	if err != nil {
+		return nil, err
+	}
+	return &destroyer{
+		workDir: base,
+		conf:    s,
+	}, nil
+}
+
+func (d *destroyer) Destroy() error {
+	tf, err := terraform.Prepare(d.workDir)
+	if err != nil {
+		return err
+	}
+	// destroy terraform resource
+	if err := tf.Destroy(context.Background()); err != nil {
+		return err
+	}
+	// destroy image
+	if err := d.destroyImage(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *destroyer) destroyImage() error {
+	var ids []*string
+	for _, s := range d.conf.Service.Hosts.Servers {
+		if s.Image.Custom && s.Image.Id != "" {
+			ids = append(ids, awsSdk.String(s.Image.Id))
+		}
+	}
+	if err := aws.DeleteImage(d.conf.Provider.Profile, ids); err != nil {
+		return err
+	}
+	return nil
+}

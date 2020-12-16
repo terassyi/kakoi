@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	kakoi_dir string = ".kakoi"
-	ext_yaml  string = ".yaml"
-	ext_yml   string = ".yml"
-	ext_json string = ".json"
+	kakoi_dir    string = ".kakoi"
+	ext_yaml     string = ".yaml"
+	ext_yml      string = ".yml"
+	ext_json     string = ".json"
+	kakoi_simbol string = "kakoi-"
 )
 
 type Initializer interface {
@@ -25,7 +26,7 @@ type Initializer interface {
 
 type initializer struct {
 	workDir string
-	conf *state.State
+	conf    *state.State
 }
 
 func NewInitializer(path string) (Initializer, error) {
@@ -77,13 +78,36 @@ func (i *initializer) init() error {
 		return err
 	}
 
-	ids, err := i.importImage(storage)
+	_, err = i.importImage(storage)
 	if err != nil {
 		return err
 	}
-	fmt.Println(ids)
+	// build image from scripts
+	if err := i.buildImage(); err != nil {
+		return err
+	}
 	// create state file
 	if err := i.conf.CreateState(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *initializer) buildImage() error {
+	// trigger codebuild image build
+	var buildIds []string
+	for _, s := range i.conf.Service.Hosts.Servers {
+		if s.Image.ScriptFilePath != nil {
+			id, err := i.startBuildImage(kakoi_simbol + s.Name)
+			if err != nil {
+				return err
+			}
+			buildIds = append(buildIds, id)
+		}
+	}
+	// wait
+	_, err := aws.WaitImageBuildResult(i.conf.Provider.Profile, buildIds)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -145,6 +169,10 @@ func (i *initializer) importImage(storage *aws.S3) (map[string]string, error) {
 	return idMap, nil
 }
 
+func (i *initializer) startBuildImage(projectName string) (string, error) {
+	return aws.StartBuild(i.conf.Provider.Profile, projectName)
+}
+
 func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 	const imagesBase = "images/"
 	var imageResources []resource.Resource
@@ -163,7 +191,7 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 			if err != nil {
 				return nil, err
 			}
-			ib, err := resource.NewImageBuilder(s.Name, i.conf.Provider.Region, base,nil, s.Image.ScriptFilePath)
+			ib, err := resource.NewImageBuilder(s.Name, i.conf.Provider.Region, base, nil, s.Image.ScriptFilePath)
 			if err != nil {
 				return nil, err
 			}
@@ -187,11 +215,6 @@ func convertExtImageFormat(ext string) string {
 	default:
 		return ""
 	}
-}
-
-func (i *initializer) buildImage(storage *aws.S3) error {
-
-	return nil
 }
 
 func (i *initializer) Init() error {

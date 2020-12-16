@@ -33,6 +33,7 @@ service:
         subnet: "subnet1"
         size: "t2.micro"
         image:
+          custom: true
           scripts:
             - "test-build.sh"
             - "test-build2.sh"
