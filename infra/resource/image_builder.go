@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-yaml"
+	"html/template"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -12,6 +14,7 @@ import (
 const (
 	builderDesc      string = "instance image for kakoi exercise environment."
 	packer_file_name string = "image_builder.json"
+	kakoi_dir string = ".kakoi"
 )
 
 var (
@@ -40,10 +43,10 @@ var (
 )
 
 func createBuildSpec(path, name string) error {
-	dstPath := filepath.Join(name, packer_file_name)
+	//dstPath := filepath.Join(name, packer_file_name)
 	placeHolder := "{{ .Path }}"
-	build_spec_pre_build_commands[build_spec_pre_build_path_index] = strings.Replace(build_spec_pre_build_commands[build_spec_pre_build_path_index], placeHolder, dstPath, -1)
-	build_spec_build_commands[build_spec_build_path_index] = strings.Replace(build_spec_build_commands[build_spec_build_path_index], placeHolder, dstPath, -1)
+	build_spec_pre_build_commands[build_spec_pre_build_path_index] = strings.Replace(build_spec_pre_build_commands[build_spec_pre_build_path_index], placeHolder, packer_file_name, -1)
+	build_spec_build_commands[build_spec_build_path_index] = strings.Replace(build_spec_build_commands[build_spec_build_path_index], placeHolder, packer_file_name, -1)
 
 	type phase struct {
 		Commands []string
@@ -70,7 +73,7 @@ func createBuildSpec(path, name string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, data, 0666)
+	return ioutil.WriteFile(filepath.Join(path, "buildspec.yml"), data, 0666)
 }
 
 type ImageBuilder struct {
@@ -78,15 +81,52 @@ type ImageBuilder struct {
 	Name     string
 	Files    []string
 	Commands []string
+	BuildSpecPath string
+	ScriptsBase string
 }
 
-func NewImageBuilder(name, region string, commands, files []string) *ImageBuilder {
+func NewImageBuilder(name, region, base string, commands, files []string) (*ImageBuilder, error) {
 	return &ImageBuilder{
 		Region:   region,
 		Name:     name,
 		Files:    files,
 		Commands: commands,
+		BuildSpecPath: filepath.Join(base, "images"),
+		ScriptsBase: base[:len(base)-7],
+	}, nil
+}
+
+func (i *ImageBuilder) BuildTemplate(workDir string) error {
+	fileName := "image_builder-" + i.Name + ".tf"
+
+	// create buildspec and packer config file
+	packer, err := i.createPackerBuilder()
+	if err != nil {
+		return err
 	}
+	path := filepath.Join(workDir, "images", i.Name)
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+
+	if err := packer.outputJson(filepath.Join(path, packer_file_name)); err != nil {
+		fmt.Println("json")
+		return err
+	}
+	if err := createBuildSpec(path, i.Name); err != nil {
+		fmt.Println("buildspec")
+		return err
+	}
+	file, err := os.Create(filepath.Join(workDir, fileName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	t, err := template.New("image_builder.tf.tmpl").ParseFiles("templates/aws/image_builder.tf.tmpl")
+	if err != nil {
+		return err
+	}
+	return t.Execute(file, i)
 }
 
 func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {
@@ -125,9 +165,9 @@ type awsSourceAmiFilter struct {
 }
 
 type awsSourceFilterImpl struct {
-	Type           string `json:"virtualization_type"`
+	Type           string `json:"virtualization-type"`
 	Name           string `json:"name"`
-	RootDeviceType string `json:"root_device_type"`
+	RootDeviceType string `json:"root-device-type"`
 }
 
 type provisioner struct {

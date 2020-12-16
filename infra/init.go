@@ -10,13 +10,15 @@ import (
 	"github.com/terassyi/kakoi/infra/state"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
-	kakoi_dir string = ".kakoi"
-	ext_yaml  string = ".yaml"
-	ext_yml   string = ".yml"
-	ext_json string = ".json"
+	kakoi_dir    string = ".kakoi"
+	ext_yaml     string = ".yaml"
+	ext_yml      string = ".yml"
+	ext_json     string = ".json"
+	kakoi_simbol string = "kakoi-"
 )
 
 type Initializer interface {
@@ -25,7 +27,7 @@ type Initializer interface {
 
 type initializer struct {
 	workDir string
-	conf *state.State
+	conf    *state.State
 }
 
 func NewInitializer(path string) (Initializer, error) {
@@ -61,7 +63,11 @@ func (i *initializer) init() error {
 	// create storage
 	storage := aws.NewS3(i.conf.Service.Name)
 	resources = append(resources, storage)
-	resources = append(resources, createImageFileUploader(i.conf)...)
+	r, err := i.createImageUploader()
+	if err != nil {
+		return err
+	}
+	resources = append(resources, r...)
 	builder, err := newBuilderFromResources(i.workDir, resources)
 	if err != nil {
 		return err
@@ -73,14 +79,60 @@ func (i *initializer) init() error {
 		return err
 	}
 
-	ids, err := i.importImage(storage)
+	_, err = i.importImage(storage)
 	if err != nil {
 		return err
 	}
-	fmt.Println(ids)
+	// build image from scripts
+	if err := i.buildImage(); err != nil {
+		return err
+	}
 	// create state file
 	if err := i.conf.CreateState(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (i *initializer) buildImage() error {
+	// trigger codebuild image build
+	buildIds := make(map[string]string)
+	for _, s := range i.conf.Service.Hosts.Servers {
+		if s.Image.ScriptFilePath != nil {
+			id, err := i.startBuildImage(kakoi_simbol + s.Name)
+			if err != nil {
+				return err
+			}
+			buildIds[s.Name] = id
+		}
+	}
+	// wait
+	_, err := aws.WaitImageBuildResult(i.conf.Provider.Profile, buildIds)
+	if err != nil {
+		return err
+	}
+	// logs
+	imageIdMap := make(map[string]string)
+	for name, buildId := range buildIds {
+		id := strings.Split(buildId, ":")[1]
+		logs, err := aws.GetLog(i.workDir, i.conf.Provider.Profile, name, "build", id)
+		if err != nil {
+			return err
+		}
+		imageId, err := i.getImageIdFromLog(logs)
+		if err != nil {
+			return err
+		}
+		imageIdMap[name] = imageId
+	}
+	for _, s := range i.conf.Service.Hosts.Servers {
+		id, ok := imageIdMap[s.Name]
+		if ok {
+			if s.Image.Id == "" {
+				s.Image.Id = id
+				fmt.Printf("[INFO] %v's image id is %v\n", s.Name, id)
+			}
+		}
 	}
 	return nil
 }
@@ -141,16 +193,37 @@ func (i *initializer) importImage(storage *aws.S3) (map[string]string, error) {
 	return idMap, nil
 }
 
-func createImageFileUploader(conf *state.State) []resource.Resource {
+func (i *initializer) startBuildImage(projectName string) (string, error) {
+	return aws.StartBuild(i.conf.Provider.Profile, projectName)
+}
+
+func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 	const imagesBase = "images/"
-	var imageUploaders []resource.Resource
-	for _, s := range conf.Service.Hosts.Servers {
+	var imageResources []resource.Resource
+	for _, s := range i.conf.Service.Hosts.Servers {
 		if s.Image.ImagePath != "" {
-			i := aws.NewS3Uploader(s.Image.ImagePath, filepath.Join(imagesBase, filepath.Base(s.Image.ImagePath)))
-			imageUploaders = append(imageUploaders, i)
+			imagePath, err := i.buildAbsPath(s.Image.ImagePath)
+			if err != nil {
+				return nil, err
+			}
+			i := aws.NewS3Uploader(imagePath, filepath.Join(imagesBase, filepath.Base(s.Image.ImagePath)))
+			imageResources = append(imageResources, i)
+		}
+		// image builder files
+		if s.Image.ScriptFilePath != nil {
+			base, err := absWorkDir(i.workDir)
+			if err != nil {
+				return nil, err
+			}
+			ib, err := resource.NewImageBuilder(s.Name, i.conf.Provider.Region, base, nil, s.Image.ScriptFilePath)
+			if err != nil {
+				return nil, err
+			}
+			imageResources = append(imageResources, ib)
+			fmt.Printf("[info] custom image build for %v\n", s.Name)
 		}
 	}
-	return imageUploaders
+	return imageResources, nil
 }
 
 func convertExtImageFormat(ext string) string {
@@ -197,6 +270,53 @@ func createWorkDir(path string) (string, error) {
 	if err := os.MkdirAll(filepath.Join(workPath, "storage"), 0755); err != nil {
 		return "", err
 	}
+	if err := os.MkdirAll(filepath.Join(workPath, "log"), 0755); err != nil {
+		return "", err
+	}
 	return workPath, nil
 }
 
+func isAbsPath(path string) bool {
+	if path[0] == '/' {
+		return true
+	}
+	return false
+}
+
+func (i *initializer) buildAbsPath(path string) (string, error) {
+	if isAbsPath(path) {
+		return path, nil
+	}
+	base := i.workDir[:len(i.workDir)-7]
+	if isAbsPath(i.workDir) {
+		return filepath.Join(base, path), nil
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(wd, base, path), nil
+}
+
+func absWorkDir(workDir string) (string, error) {
+	if isAbsPath(workDir) {
+		return workDir, nil
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(wd, workDir), nil
+}
+
+func (i *initializer) getImageIdFromLog(logs []string) (string, error) {
+	const createdMessage = "amazon-ebs: AMIs were created:"
+	for i := 0; i < len(logs); i++ {
+		if strings.Contains(logs[i], createdMessage) {
+			idTmp := strings.Split(logs[i+1], ": ")[1]
+			id := strings.Split(idTmp, "\n")[0]
+			return id, nil
+		}
+	}
+	return "", fmt.Errorf("image id is not found in logs")
+}

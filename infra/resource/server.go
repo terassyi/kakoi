@@ -43,6 +43,10 @@ func (s *Server) SetImage(image *Image) {
 	s.Image = image
 }
 
+func (s *Server) SetImageBuilder(imageBuilder *ImageBuilder) {
+	s.ImageBuilder = *imageBuilder
+}
+
 func (s *Server) BuildTemplate(workDir string) error {
 	fileName := "kakoi-" + s.Name + ".tf"
 	file, err := os.Create(filepath.Join(workDir, fileName))

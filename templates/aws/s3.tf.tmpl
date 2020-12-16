@@ -9,6 +9,14 @@ resource "aws_s3_bucket" "kakoi-bucket" {
 	}
 }
 
+// log group for kakoi
+resource "aws_cloudwatch_log_group" "kakoi" {
+	name = "kakoi"
+	tags = {
+		Name = "kakoi"
+	}
+}
+
 output "kakoi-bucket-id" {
 	value = "${ aws_s3_bucket.kakoi-bucket.id }"
 }
