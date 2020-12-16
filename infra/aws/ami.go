@@ -201,5 +201,6 @@ func DeleteImage(profile string, imageIds []*string) error {
 			return err
 		}
 	}
+	fmt.Println("[INFO] delete image")
 	return nil
 }

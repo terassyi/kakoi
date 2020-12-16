@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/google/subcommands"
 	"github.com/terassyi/kakoi/infra"
-	"github.com/terassyi/kakoi/infra/terraform"
 )
 
 type Destroy struct {
@@ -30,20 +29,13 @@ func (d *Destroy) SetFlags(f *flag.FlagSet) {
 }
 
 func (d *Destroy) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	workDir, err := infra.IsExistWorkDir(d.Path)
+	destroyer, err := infra.NewDestroyer(d.Path)
 	if err != nil {
 		fmt.Printf("[ERROR] %v\n", err)
 		return subcommands.ExitFailure
 	}
-	fmt.Println("[INFO] destroy")
-	tf, err := terraform.Prepare(workDir)
-	if err != nil {
-		fmt.Printf("[ERROR] %v\n", err)
-		return subcommands.ExitFailure
-	}
-	tfCtx := context.Background()
-	if err := tf.Destroy(tfCtx); err != nil {
-		fmt.Printf("[ERROR] %v\n", err)
+	if err := destroyer.Destroy(); err != nil {
+		fmt.Println("[ERROR] ", err)
 		return subcommands.ExitFailure
 	}
 	return subcommands.ExitSuccess

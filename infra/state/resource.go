@@ -7,10 +7,10 @@ type State struct {
 }
 
 type Service struct {
-	Name    string  `json:"name"`
+	Name    string   `json:"name"`
 	Storage *Storage `json:"storage"`
 	Network *Network `json:"network"`
-	Hosts *Hosts  `json:"hosts"`
+	Hosts   *Hosts   `json:"hosts"`
 }
 
 type Provider struct {
@@ -44,44 +44,44 @@ type Route struct {
 }
 
 type VpnGateway struct {
-	Id string `json:"id"`
+	Id               string `json:"id"`
 	Range            string `json:"range"`
 	Domain           string `json:"domain"`
-	AssociatedSubnet string `json:"associated_subnet"`  // TODO 重複してる
-	Cert Cert `json:"cert"`
+	AssociatedSubnet string `json:"associated_subnet"` // TODO 重複してる
+	Cert             Cert   `json:"cert"`
 }
 
 type Cert struct {
 	Status string `json:"status"`
-	Path string `json:"path"`
+	Path   string `json:"path"`
 }
 
 type KeyPair struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
 	Status string `json:"status"` // automatically generated
 }
 
 type Hosts struct {
-	KeyPair KeyPair `json:"key"`
+	KeyPair KeyPair   `json:"key"`
 	Servers []*Server `json:"servers"`
 }
 
 type Server struct {
-	Name   string `json:"name"`
-	Size string `json:"size"`
-	Number int `json:"number"` // default 1
-	Subnet string `json:"subnet"`
-	Address []string `json:"address"`
-	Image *ServerImage `json:"image"`
-	Status string `json:"status"` // automatically generated
-	Ports  []int  `json:"ports"`
+	Name    string       `json:"name"`
+	Size    string       `json:"size"`
+	Number  int          `json:"number"` // default 1
+	Subnet  string       `json:"subnet"`
+	Address []string     `json:"address"`
+	Image   *ServerImage `json:"image"`
+	Status  string       `json:"status"` // automatically generated
+	Ports   []int        `json:"ports"`
 }
 
 type ServerImage struct {
-	Custom bool `yaml:"custom"`
-	Id string `json:"id"`
-	Status string `json:"status"`
-	ImagePath string `json:"image_path"`
+	Custom         bool     `json:"custom"`
+	Id             string   `json:"id"`
+	Status         string   `json:"status"`
+	ImagePath      string   `json:"image_path"`
 	ScriptFilePath []string `json:"scripts"`
-	InlineScripts []string `json:"inline"`
+	InlineScripts  []string `json:"inline"`
 }

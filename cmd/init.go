@@ -31,6 +31,7 @@ func (i *Init) SetFlags(f *flag.FlagSet) {
 func (i *Init) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	initer, err := infra.NewInitializer(i.Path)
 	if err != nil {
+		fmt.Println("[ERROR] ", err)
 		return subcommands.ExitFailure
 	}
 	if err := initer.Init(); err != nil {

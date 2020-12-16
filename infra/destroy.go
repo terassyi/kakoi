@@ -2,6 +2,9 @@ package infra
 
 import (
 	"context"
+	"os"
+
+	//"context"
 	"fmt"
 	awsSdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/terassyi/kakoi/infra/aws"
@@ -23,8 +26,8 @@ func NewDestroyer(path string) (Destroyer, error) {
 	if !isExistStateFile(path) {
 		return nil, fmt.Errorf("[ERROR] state file is not found")
 	}
-	base := filepath.Base(path)
-	parser, err := state.NewParser(base, path)
+	base := filepath.Join(filepath.Dir(path), kakoi_dir)
+	parser, err := state.NewParser(base, filepath.Join(base, kakoi_state))
 	if err != nil {
 		return nil, err
 	}
@@ -43,12 +46,16 @@ func (d *destroyer) Destroy() error {
 	if err != nil {
 		return err
 	}
-	// destroy terraform resource
+	fmt.Println(tf)
+	//destroy terraform resource
 	if err := tf.Destroy(context.Background()); err != nil {
 		return err
 	}
 	// destroy image
 	if err := d.destroyImage(); err != nil {
+		return err
+	}
+	if err := d.destroyWorkDir(); err != nil {
 		return err
 	}
 	return nil
@@ -65,4 +72,8 @@ func (d *destroyer) destroyImage() error {
 		return err
 	}
 	return nil
+}
+
+func (d *destroyer) destroyWorkDir() error {
+	return os.Remove(d.workDir)
 }
