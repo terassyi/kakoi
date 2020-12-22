@@ -63,6 +63,7 @@ func (i *initializer) init() error {
 	// create storage
 	storage := aws.NewS3(i.conf.Service.Name)
 	resources = append(resources, storage)
+	resources = append(resources, resource.NewImageBuilderRole())
 	r, err := i.createImageUploader()
 	if err != nil {
 		return err

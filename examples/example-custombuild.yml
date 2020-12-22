@@ -37,3 +37,10 @@ service:
           scripts:
             - "test-build.sh"
             - "test-build2.sh"
+      - name: "example-host2"
+        subnet: "subnet2"
+        size: "t2.micro"
+        image:
+          custom: true
+          scripts:
+            - "test-build.sh"
