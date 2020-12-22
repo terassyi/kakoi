@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 func terraformTest() error {
@@ -62,17 +61,8 @@ func Prepare(workDir string) (*tfexec.Terraform, error) {
 		return nil, err
 	}
 	tf.SetLogger(log.New(os.Stdout, "", 0))
-
-	// output file
-	outputPath := filepath.Join(workDir, "output")
 	if err := tf.Init(context.Background(), tfexec.Upgrade(true), tfexec.LockTimeout("60s")); err != nil {
 		return nil, err
 	}
-	outputFile, err := os.Create(filepath.Join(outputPath, "output"))
-	if err != nil {
-		return nil, err
-	}
-	defer outputFile.Close()
-	//tf.SetStdout(outputFile)
 	return tf, nil
 }
