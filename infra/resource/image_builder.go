@@ -235,3 +235,23 @@ func newProvisioner(commands, files []string) (*provisioner, error) {
 	}
 	return nil, fmt.Errorf("provisioning script is not set.")
 }
+
+type ImageBuilderRole struct {}
+
+func NewImageBuilderRole() *ImageBuilderRole {
+	return &ImageBuilderRole{}
+}
+
+func (ir *ImageBuilderRole) BuildTemplate(workDir string) error {
+	const customImageBuilderRoleFileName = "image_builder_role.tf"
+	file, err := os.Create(filepath.Join(workDir, customImageBuilderRoleFileName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	t, err := template.New("image_builder_role.tf.tmpl").ParseFiles("templates/aws/image_builder_role.tf.tmpl")
+	if err != nil {
+		return err
+	}
+	return t.Execute(file, t)
+}

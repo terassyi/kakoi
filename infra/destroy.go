@@ -58,6 +58,9 @@ func (d *destroyer) Destroy() error {
 	if err := d.destroyWorkDir(); err != nil {
 		return err
 	}
+	if err := d.destroyKakoiVpnfile(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -75,5 +78,13 @@ func (d *destroyer) destroyImage() error {
 }
 
 func (d *destroyer) destroyWorkDir() error {
-	return os.Remove(d.workDir)
+	return os.RemoveAll(d.workDir)
+}
+
+func (d *destroyer) destroyKakoiVpnfile() error {
+	if _, err := os.Stat("kakoi.ovpn"); err != nil {
+		return os.Remove("kakoi.ovpn")
+	} else {
+		return fmt.Errorf("kakoi.ovpn is not exist.")
+	}
 }

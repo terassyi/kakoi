@@ -27,7 +27,11 @@ type infra struct {
 }
 
 func New(path string) (Infrastructure, error) {
-	conf, workDir, err := parse(path)
+	dir, file := filepath.Split(path)
+	if err := state.ValidateExtName(file); err != nil {
+		return nil, err
+	}
+	conf, workDir, err := parse(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -82,9 +86,9 @@ func (i *infra) Create() error {
 	if vpn == nil {
 		return fmt.Errorf("vpn resource is not found")
 	}
-	//if err := vpn.Create(); err != nil {
-	//	return err
-	//}
+	if err := vpn.Create(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -179,25 +183,27 @@ func isExistStateFile(path string) bool {
 }
 
 func parse(path string) (*state.State, string, error) {
-	if isFileSpecified(path) {
-		workDir, err := createWorkDir(filepath.Base(path))
-		if err != nil {
-			return nil, "", err
-		}
-		parser, err := state.NewParser(workDir, path)
-		if err != nil {
-			return nil, "", err
-		}
-		s, err := parser.Parse()
-		if err != nil {
-			return nil, "", err
-		}
-		return s, workDir, nil
-	}
+	//if isFileSpecified(path) {
+	//	workDir, err := createWorkDir(filepath.Base(path))
+	//	if err != nil {
+	//		return nil, "", err
+	//	}
+	//	parser, err := state.NewParser(workDir, path)
+	//	if err != nil {
+	//		return nil, "", err
+	//	}
+	//	s, err := parser.Parse()
+	//	if err != nil {
+	//		return nil, "", err
+	//	}
+	//	return s, workDir, nil
+	//}
 	if !isExistStateFile(filepath.Join(path, kakoi_dir)) {
 		return nil, "", fmt.Errorf("kakoi.state is not found")
 	}
+	fmt.Println(path)
 	workDir := filepath.Join(path, kakoi_dir)
+	fmt.Println(workDir)
 	parser, err := state.NewParser(workDir, filepath.Join(workDir, kakoi_state))
 	if err != nil {
 		return nil, "", err
