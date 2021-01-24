@@ -150,7 +150,7 @@ func (i *initializer) importImage(storage *aws.S3) (map[string]string, error) {
 		if s.Image.ImagePath != "" {
 			// convert to ami
 			ext := filepath.Ext(s.Image.ImagePath)
-			fmt.Println("s3 path=", filepath.Join(storage.BucketName(), imagesBase, s.Name))
+			//fmt.Println("s3 path=", filepath.Join(storage.BucketName(), imagesBase, s.Name))
 			input := &ec2.ImportImageInput{
 				Architecture: awsSdk.String("x86_64"),
 				Description:  awsSdk.String("kakoi vulnerable image"),
@@ -221,7 +221,7 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 				return nil, err
 			}
 			imageResources = append(imageResources, ib)
-			fmt.Printf("[info] custom image build for %v\n", s.Name)
+			fmt.Printf("[INFO] custom image build for %v\n", s.Name)
 		}
 	}
 	return imageResources, nil

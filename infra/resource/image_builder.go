@@ -110,11 +110,9 @@ func (i *ImageBuilder) BuildTemplate(workDir string) error {
 	}
 
 	if err := packer.outputJson(filepath.Join(path, packer_file_name)); err != nil {
-		fmt.Println("json")
 		return err
 	}
 	if err := createBuildSpec(path, i.Name); err != nil {
-		fmt.Println("buildspec")
 		return err
 	}
 	file, err := os.Create(filepath.Join(workDir, fileName))
@@ -212,7 +210,7 @@ func newAwsSourceFilter() *awsSourceAmiFilter {
 	return &awsSourceAmiFilter{
 		Filters: awsSourceFilterImpl{
 			Type:           "hvm",
-			Name:           "amzn-ami*-ebs",
+			Name:           "amzn2-ami*-ebs",
 			RootDeviceType: "ebs",
 		},
 		MostRecent: true,

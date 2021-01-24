@@ -201,9 +201,7 @@ func parse(path string) (*state.State, string, error) {
 	if !isExistStateFile(filepath.Join(path, kakoi_dir)) {
 		return nil, "", fmt.Errorf("kakoi.state is not found")
 	}
-	fmt.Println(path)
 	workDir := filepath.Join(path, kakoi_dir)
-	fmt.Println(workDir)
 	parser, err := state.NewParser(workDir, filepath.Join(workDir, kakoi_state))
 	if err != nil {
 		return nil, "", err

@@ -149,22 +149,27 @@ func getBuildStatus(profile string, buildIds map[string]string) (*codebuild.Batc
 }
 
 func checkBuildStatus(res *codebuild.BatchGetBuildsOutput) (bool, error) {
-	status := false
+	counter := 0
+	completed := 0
 	for _, build := range res.Builds {
 		statusMessage := *build.BuildStatus
 		phase := *build.CurrentPhase
 		fmt.Printf("[INFO] (%v)%v is %v\n", phase, *build.Id, statusMessage)
+		counter += 1
 		if phase == "COMPLETED" {
-			status = true
-			return status, nil
-		} else {
-			status = false
+			completed += 1
+			//return status, nil
 		}
 		if statusMessage == "FAILED" || phase == "FAULT" {
 			return false, fmt.Errorf("build failed")
 		}
 	}
-	return status, nil
+	if completed == counter {
+		fmt.Println("[INFO] building images is finished ", completed)
+	} else {
+		fmt.Println("[INFO] building images is not finished ", completed)
+	}
+	return counter == completed, nil
 }
 
 func StartBuild(profile, projectName string) (string, error) {

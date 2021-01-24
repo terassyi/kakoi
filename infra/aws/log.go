@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -14,7 +13,7 @@ const (
 
 func GetLog(workDir, profile, name, prefix, id string) ([]string, error) {
 	streamName := "kakoi-" + name + "-" + prefix + "/" + id
-	fmt.Println(streamName)
+	//fmt.Println(streamName)
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile:           profile,
 		SharedConfigState: session.SharedConfigEnable,

@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"fmt"
 	tfjson "github.com/hashicorp/terraform-json"
 	"os"
 )
@@ -20,6 +19,6 @@ func ToJson(file string) (*tfjson.Config, error) {
 	if err := conf.UnmarshalJSON(data); err != nil {
 		return nil, err
 	}
-	fmt.Println(conf)
+	//fmt.Println(conf)
 	return conf, nil
 }

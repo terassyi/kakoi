@@ -46,7 +46,6 @@ func (d *destroyer) Destroy() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(tf)
 	//destroy terraform resource
 	if err := tf.Destroy(context.Background()); err != nil {
 		return err
@@ -83,8 +82,7 @@ func (d *destroyer) destroyWorkDir() error {
 
 func (d *destroyer) destroyKakoiVpnfile() error {
 	if _, err := os.Stat("kakoi.ovpn"); err != nil {
-		return os.Remove("kakoi.ovpn")
-	} else {
-		return fmt.Errorf("kakoi.ovpn is not exist.")
+		return err
 	}
+	return os.Remove("kakoi.ovpn")
 }
