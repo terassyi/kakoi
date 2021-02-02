@@ -120,7 +120,7 @@ func (i *ImageBuilder) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("image_builder.tf.tmpl").ParseFiles("templates/aws/image_builder.tf.tmpl")
+	t, err := template.New("image_builder.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/image_builder.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (ir *ImageBuilderRole) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("image_builder_role.tf.tmpl").ParseFiles("templates/aws/image_builder_role.tf.tmpl")
+	t, err := template.New("image_builder_role.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/image_builder_role.tf.tmpl")
 	if err != nil {
 		return err
 	}

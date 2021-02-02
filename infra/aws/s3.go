@@ -30,7 +30,7 @@ func (s *S3) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("s3.tf.tmpl").ParseFiles("templates/aws/s3.tf.tmpl")
+	t, err := template.New("s3.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/s3.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (su *S3Uploader) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("s3_upload.tf.tmpl").ParseFiles("templates/aws/s3_upload.tf.tmpl")
+	t, err := template.New("s3_upload.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/s3_upload.tf.tmpl")
 	if err != nil {
 		return err
 	}
