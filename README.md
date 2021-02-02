@@ -1,4 +1,4 @@
-[![SecHack365](https://img.shields.io/static/v1?label=SecHack365&message=2020&color=ffd700)](https://sechack365.nict.go.jp/) [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]
+[![SecHack365](https://img.shields.io/static/v1?label=SecHack365&message=2020&color=ffd700)](https://sechack365.nict.go.jp/) [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Kakoi
 The configuration management tool for security exercises infrastructure.
