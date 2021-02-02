@@ -38,7 +38,7 @@ func (n *Network) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("vpc.tf.tmpl").ParseFiles(filepath.Join("templates/aws", "vpc.tf.tmpl"))
+	t, err := template.New("vpc.tf.tmpl").ParseFiles(filepath.Join("/etc/kakoi/templates/aws", "vpc.tf.tmpl"))
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (s *Subnet) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("subnet.tf.tmpl").ParseFiles(filepath.Join("templates/aws", "subnet.tf.tmpl"))
+	t, err := template.New("subnet.tf.tmpl").ParseFiles(filepath.Join("/etc/kakoi/templates/aws", "subnet.tf.tmpl"))
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (v *Vpn) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("vpn.tf.tmpl").ParseFiles("templates/aws/vpn.tf.tmpl")
+	t, err := template.New("vpn.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/vpn.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (v *Vpn) createOvpnConfig() error {
 		Cert:   clientCertString,
 		Key:    clientKeyString,
 	}
-	t, err := template.New("kakoi.ovpn.tmpl").ParseFiles("templates/kakoi.ovpn.tmpl")
+	t, err := template.New("kakoi.ovpn.tmpl").ParseFiles("/etc/kakoi/templates/kakoi.ovpn.tmpl")
 	if err != nil {
 		return err
 	}

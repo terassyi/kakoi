@@ -54,7 +54,7 @@ func (s *Server) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer file.Close()
-	t, err := template.New("server.tf.tmpl").ParseFiles("templates/aws/server.tf.tmpl")
+	t, err := template.New("server.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/server.tf.tmpl")
 	if err != nil {
 		return err
 	}

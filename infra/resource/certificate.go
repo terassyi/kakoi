@@ -40,7 +40,7 @@ func (p *Pki) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer pkiFile.Close()
-	t, err := template.New("pki.tf.tmpl").ParseFiles("templates/aws/pki.tf.tmpl")
+	t, err := template.New("pki.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/pki.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (k *KeyPair) BuildTemplate(workDir string) error {
 		return err
 	}
 	defer keyPairFile.Close()
-	t, err := template.New("keypair.tf.tmpl").ParseFiles("templates/aws/keypair.tf.tmpl")
+	t, err := template.New("keypair.tf.tmpl").ParseFiles("/etc/kakoi/templates/aws/keypair.tf.tmpl")
 	if err != nil {
 		return err
 	}
