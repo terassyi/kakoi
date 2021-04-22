@@ -1,11 +1,11 @@
 provider:
   name: "aws"
-  profile: "kakoi"
+  profile: "example-profile"
   region: "ap-northeast-1"
 service:
   name: "example"
   network:
-    name: "kakoi"
+    name: "example-network"
     range: "10.10.0.0/16"
     subnets:
       - name: "subnet1"
@@ -23,19 +23,19 @@ service:
             to: "10.10.20.0/24"
     vpn_gateway:
       range: "10.10.30.0/22"
-      domain: "example.kakoi.terrasyi.net"
+      domain: "example.com"
       associated_subnet: "subnet1"
   hosts:
     key:
-      name: "example-kakoi-key"
+      name: "example-key"
     servers:
       - name: "example-host1"
         subnet: "subnet1"
-        size: "t2.micro"
         image:
-          image_path: "/Users/spectre/VirtualMachine/mrRobot.ova"
+          image_path: "~/example-host1.ova"
       - name: "example-host2"
-        subnet: "subnet1"
-        number: 2
+        subnet: "subnet2"
         image:
-          image_path: "/Users/spectre/VirtualMachine/FunBox4.ova"
+          custom: true
+          scripts:
+            - "example-host2.sh"
