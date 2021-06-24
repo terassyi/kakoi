@@ -3,7 +3,7 @@ package cert
 import "testing"
 
 func TestGeneratePki(t *testing.T) {
-	err := GeneratePki()
+	err := GeneratePki("test", "test.domain")
 	if err != nil {
 		t.Fatal(err)
 	}
