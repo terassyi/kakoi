@@ -2,15 +2,16 @@ package infra
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	awsSdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/terassyi/kakoi/infra/aws"
 	"github.com/terassyi/kakoi/infra/resource"
 	"github.com/terassyi/kakoi/infra/state"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (

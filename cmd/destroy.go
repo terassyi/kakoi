@@ -4,12 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"github.com/google/subcommands"
 	"github.com/terassyi/kakoi/infra"
 )
 
 type Destroy struct {
-	Path string
+	Path  string
+	Force bool
 }
 
 func (*Destroy) Name() string {
@@ -26,10 +28,11 @@ func (*Destroy) Usage() string {
 
 func (d *Destroy) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&d.Path, "p", "", "destroy resource")
+	f.BoolVar(&d.Force, "f", false, "force destroy")
 }
 
 func (d *Destroy) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	destroyer, err := infra.NewDestroyer(d.Path)
+	destroyer, err := infra.NewDestroyer(d.Path, d.Force)
 	if err != nil {
 		fmt.Printf("[ERROR] %v\n", err)
 		return subcommands.ExitFailure

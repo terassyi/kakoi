@@ -3,11 +3,12 @@ package terraform
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/hashicorp/terraform-exec/tfinstall"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/hashicorp/terraform-exec/tfinstall"
 )
 
 func terraformTest() error {
@@ -61,7 +62,8 @@ func Prepare(workDir string) (*tfexec.Terraform, error) {
 		return nil, err
 	}
 	tf.SetLogger(log.New(os.Stdout, "", 0))
-	if err := tf.Init(context.Background(), tfexec.Upgrade(true), tfexec.LockTimeout("60s")); err != nil {
+	if err := tf.Init(context.Background()); err != nil {
+		// if err := tf.Init(context.Background(), tfexec.VerifyPlugins(false), tfexec.Upgrade(true), tfexec.LockTimeout("60s")); err != nil {
 		return nil, err
 	}
 	return tf, nil
