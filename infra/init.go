@@ -217,12 +217,18 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 			if err != nil {
 				return nil, err
 			}
-			ib, err := resource.NewImageBuilder(s.Name, i.conf.Provider.Region, base, nil, s.Image.ScriptFilePath)
+			ib, err := resource.NewImageBuilder(s.Name,
+				i.conf.Provider.Region,
+				base,
+				s.Image.BaseImage,
+				s.Image.LoginUser,
+				s.Image.AwsImageOwner,
+				nil,
+				s.Image.ScriptFilePath)
 			if err != nil {
 				return nil, err
 			}
 			imageResources = append(imageResources, ib)
-			fmt.Printf("[INFO] custom image build for %v\n", s.Name)
 		}
 	}
 	return imageResources, nil

@@ -82,6 +82,10 @@ type ServerImage struct {
 	Id             string   `json:"id"`
 	Status         string   `json:"status"`
 	ImagePath      string   `json:"image_path"`
+	BaseImage      string   `json:"base_image"`
+	LoginUser      string   `json:"login_user,omitempty"`
+	Architecture   string   `json:"architecture"`
+	AwsImageOwner  string   `json:"aws_image_owner,omitempty"`
 	ScriptFilePath []string `json:"scripts"`
 	InlineScripts  []string `json:"inline"`
 }

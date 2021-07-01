@@ -60,6 +60,12 @@ func (d *destroyer) Destroy() error {
 	if err := tf.Destroy(context.Background()); err != nil {
 		return err
 	}
+	if d.force {
+		if err := d.destroyWorkDir(); err != nil {
+			return err
+		}
+		return nil
+	}
 	// destroy image
 	if err := d.destroyImage(); err != nil {
 		return err
@@ -92,6 +98,9 @@ func (d *destroyer) destroyWorkDir() error {
 
 func (d *destroyer) destroyKakoiVpnfile() error {
 	if _, err := os.Stat("kakoi.ovpn"); err != nil {
+		if err == os.ErrNotExist {
+			return nil
+		}
 		return err
 	}
 	return os.Remove("kakoi.ovpn")
