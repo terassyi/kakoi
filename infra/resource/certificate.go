@@ -1,16 +1,17 @@
 package resource
 
 import (
-	"github.com/terassyi/kakoi/cert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/terassyi/kakoi/cert"
 )
 
 type Pki struct {
 	Path       string
-	WorkPath string
+	WorkPath   string
 	domain     string
 	CaCert     string
 	CaKey      string
@@ -23,7 +24,7 @@ type Pki struct {
 func newPki(path, domain string) *Pki {
 	return &Pki{
 		Path:       path,
-		WorkPath: "pki",
+		WorkPath:   "pki",
 		domain:     domain,
 		CaCert:     "ca." + domain + ".crt",
 		CaKey:      "ca." + domain + ".key",
@@ -76,25 +77,25 @@ func (p *Pki) ReadClientKey() (string, error) {
 }
 
 type KeyPair struct {
-	Path string
+	Path     string
 	WorkPath string
-	Name string
-	Pem  string
-	Pub  string
+	Name     string
+	Pem      string
+	Pub      string
 }
 
 func newKeyPair(path, name string) *KeyPair {
 	return &KeyPair{
-		Path: path,
+		Path:     path,
 		WorkPath: "keys",
-		Name: name,
-		Pem:  name + ".pem",
-		Pub:  name + ".pub",
+		Name:     name,
+		Pem:      name + ".pem",
+		Pub:      name + ".pub",
 	}
 }
 
 func (k *KeyPair) BuildTemplate(workDir string) error {
-	keyPairFile, err := os.Create(filepath.Join(workDir, k.Name + ".tf"))
+	keyPairFile, err := os.Create(filepath.Join(workDir, k.Name+".tf"))
 	if err != nil {
 		return err
 	}

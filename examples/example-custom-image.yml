@@ -1,0 +1,48 @@
+provider:
+  name: "aws"
+  profile: "kakoi"
+  region: "ap-northeast-1"
+service:
+  name: "custom-image"
+  network:
+    name: "custom-image"
+    range: "10.10.0.0/16"
+    subnets:
+      - name: "public"
+        range: "10.10.10.0/24"
+        private: true
+        vpn_gateway_associated: true
+        routes:
+          - from: "0.0.0.0/0"
+            to: "10.10.10.0/24"
+      - name: "private1"
+        range: "10.10.20.0/24"
+        private: true
+        routes:
+          - from: "10.10.10.0/24"
+            to: "10.10.20.0/24"
+      - name: "private2"
+        range: "10.10.30.0/24"
+        private: true
+        routes:
+          - from: "10.10.20.0/24"
+            to: "10.10.30.0/24"
+    vpn_gateway:
+      range: "10.10.40.0/22"
+      domain: "custom.kakoi.terassyi.net"
+      associated_subnet: "public"
+  hosts:
+    key:
+      name: "custom-image-key"
+    servers:
+      - name: "custom-image"
+        size: "t4g.micro"
+        number: 10
+        subnet: "public"
+        image:
+          custom: true
+          base_image: "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
+          login_user: ubuntu
+          aws_image_owner: "099720109477"
+          scripts:
+            - "custom_image.sh"

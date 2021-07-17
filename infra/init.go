@@ -2,15 +2,16 @@ package infra
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	awsSdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/terassyi/kakoi/infra/aws"
 	"github.com/terassyi/kakoi/infra/resource"
 	"github.com/terassyi/kakoi/infra/state"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -202,6 +203,7 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 	const imagesBase = "images/"
 	var imageResources []resource.Resource
 	for _, s := range i.conf.Service.Hosts.Servers {
+		fmt.Println("[INFO] server: ", s.Name)
 		if s.Image.ImagePath != "" {
 			imagePath, err := i.buildAbsPath(s.Image.ImagePath)
 			if err != nil {
@@ -216,14 +218,21 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 			if err != nil {
 				return nil, err
 			}
-			ib, err := resource.NewImageBuilder(s.Name, i.conf.Provider.Region, base, nil, s.Image.ScriptFilePath)
+			ib, err := resource.NewImageBuilder(s.Name,
+				i.conf.Provider.Region,
+				base,
+				s.Image.BaseImage,
+				s.Image.LoginUser,
+				s.Image.AwsImageOwner,
+				nil,
+				s.Image.ScriptFilePath)
 			if err != nil {
 				return nil, err
 			}
 			imageResources = append(imageResources, ib)
-			fmt.Printf("[INFO] custom image build for %v\n", s.Name)
 		}
 	}
+	fmt.Println(imageResources)
 	return imageResources, nil
 }
 

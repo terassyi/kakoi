@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/terassyi/kakoi/infra/resource"
-	"github.com/terassyi/kakoi/infra/state"
 	"os"
 	"path/filepath"
+
+	"github.com/terassyi/kakoi/infra/resource"
+	"github.com/terassyi/kakoi/infra/state"
 )
 
 type Infrastructure interface {
@@ -21,7 +21,7 @@ type Infrastructure interface {
 
 type infra struct {
 	*builder
-	name string
+	name     string
 	workDir  string
 	provider string
 }
@@ -41,7 +41,7 @@ func New(path string) (Infrastructure, error) {
 	}
 	return &infra{
 		builder:  builder,
-		name: conf.Service.Name,
+		name:     conf.Service.Name,
 		workDir:  workDir,
 		provider: conf.Provider.Name,
 	}, nil
@@ -69,12 +69,11 @@ func (i *infra) Create() error {
 			return err
 		}
 	}
-	ctx :=  context.Background()
-	err := i.tf.Init(ctx, tfexec.Upgrade(true), tfexec.LockTimeout("60s"))
+	err := i.tf.Init(context.Background())
 	if err != nil {
 		return err
 	}
-	if err := i.tf.Apply(ctx); err != nil {
+	if err := i.tf.Apply(context.Background()); err != nil {
 		return err
 	}
 

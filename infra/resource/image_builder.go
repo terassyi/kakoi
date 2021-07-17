@@ -3,18 +3,19 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/goccy/go-yaml"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/goccy/go-yaml"
 )
 
 const (
 	builderDesc      string = "instance image for kakoi exercise environment."
 	packer_file_name string = "image_builder.json"
-	kakoi_dir string = ".kakoi"
+	kakoi_dir        string = ".kakoi"
 )
 
 var (
@@ -77,22 +78,28 @@ func createBuildSpec(path, name string) error {
 }
 
 type ImageBuilder struct {
-	Region   string
-	Name     string
-	Files    []string
-	Commands []string
+	Region        string
+	Name          string
+	Base          string
+	User          string
+	ImageOwner    string
+	Files         []string
+	Commands      []string
 	BuildSpecPath string
-	ScriptsBase string
+	ScriptsBase   string
 }
 
-func NewImageBuilder(name, region, base string, commands, files []string) (*ImageBuilder, error) {
+func NewImageBuilder(name, region, base, baseImage, user, imageOwner string, commands, files []string) (*ImageBuilder, error) {
 	return &ImageBuilder{
-		Region:   region,
-		Name:     name,
-		Files:    files,
-		Commands: commands,
+		Region:        region,
+		Name:          name,
+		Base:          baseImage,
+		User:          user,
+		ImageOwner:    imageOwner,
+		Files:         files,
+		Commands:      commands,
 		BuildSpecPath: filepath.Join(base, "images"),
-		ScriptsBase: base[:len(base)-7],
+		ScriptsBase:   base[:len(base)-7],
 	}, nil
 }
 
@@ -128,7 +135,7 @@ func (i *ImageBuilder) BuildTemplate(workDir string) error {
 }
 
 func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {
-	return newPackerBuilder(i.Name, i.Region, i.Commands, i.Files)
+	return newPackerBuilder(i.Name, i.Region, i.Base, i.User, i.ImageOwner, i.Commands, i.Files)
 }
 
 type packerBuilder struct {
@@ -174,8 +181,8 @@ type provisioner struct {
 	Scripts []string `json:"scripts"`
 }
 
-func newPackerBuilder(name, region string, commands, files []string) (*packerBuilder, error) {
-	builder := newAwsBuilder(region, name)
+func newPackerBuilder(name, region, base, user, imageOwner string, commands, files []string) (*packerBuilder, error) {
+	builder := newAwsBuilder(region, name, base, user, imageOwner)
 	var filenames []string
 	for _, p := range files {
 		//if _, err := os.Stat(p); err != nil {
@@ -193,28 +200,38 @@ func newPackerBuilder(name, region string, commands, files []string) (*packerBui
 	}, nil
 }
 
-func newAwsBuilder(region, name string) *awsBuilder {
+func newAwsBuilder(region, name, base, user, imageOwner string) *awsBuilder {
+	if user == "" {
+		user = "ec2-user"
+	}
 	return &awsBuilder{
 		Type:           "amazon-ebs",
 		Region:         region,
-		InstanceType:   "t2.micro",
-		UserName:       "ec2-user",
+		InstanceType:   "t4g.micro",
+		UserName:       user,
 		AmiName:        "kakoi-" + name,
 		AmiDescription: builderDesc,
 		PublicIp:       true,
-		Filters:        *newAwsSourceFilter(),
+		Filters:        *newAwsSourceFilter(base, imageOwner),
 	}
 }
 
-func newAwsSourceFilter() *awsSourceAmiFilter {
+func newAwsSourceFilter(base, imageOwner string) *awsSourceAmiFilter {
+	imageOwners := []string{"137112412989"}
+	if base == "" {
+		base = "amzn2-ami*-ebs"
+	}
+	if imageOwner != "" {
+		imageOwners = append(imageOwners, imageOwner)
+	}
 	return &awsSourceAmiFilter{
 		Filters: awsSourceFilterImpl{
 			Type:           "hvm",
-			Name:           "amzn2-ami*-ebs",
+			Name:           base,
 			RootDeviceType: "ebs",
 		},
 		MostRecent: true,
-		Owners:     []string{"137112412989"},
+		Owners:     imageOwners,
 	}
 }
 
@@ -234,7 +251,7 @@ func newProvisioner(commands, files []string) (*provisioner, error) {
 	return nil, fmt.Errorf("provisioning script is not set.")
 }
 
-type ImageBuilderRole struct {}
+type ImageBuilderRole struct{}
 
 func NewImageBuilderRole() *ImageBuilderRole {
 	return &ImageBuilderRole{}

@@ -6,11 +6,12 @@ import (
 
 	//"context"
 	"fmt"
+	"path/filepath"
+
 	awsSdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/terassyi/kakoi/infra/aws"
 	"github.com/terassyi/kakoi/infra/state"
 	"github.com/terassyi/kakoi/infra/terraform"
-	"path/filepath"
 )
 
 type Destroyer interface {
@@ -20,13 +21,21 @@ type Destroyer interface {
 type destroyer struct {
 	workDir string
 	conf    *state.State
+	force   bool
 }
 
-func NewDestroyer(path string) (Destroyer, error) {
+func NewDestroyer(path string, force bool) (Destroyer, error) {
+	fmt.Println(force)
+	base := filepath.Join(filepath.Dir(path), kakoi_dir)
+	if force {
+		return &destroyer{
+			workDir: base,
+			force:   force,
+		}, nil
+	}
 	if !isExistStateFile(path) {
 		return nil, fmt.Errorf("[ERROR] state file is not found")
 	}
-	base := filepath.Join(filepath.Dir(path), kakoi_dir)
 	parser, err := state.NewParser(base, filepath.Join(base, kakoi_state))
 	if err != nil {
 		return nil, err
@@ -38,6 +47,7 @@ func NewDestroyer(path string) (Destroyer, error) {
 	return &destroyer{
 		workDir: base,
 		conf:    s,
+		force:   false,
 	}, nil
 }
 
@@ -49,6 +59,12 @@ func (d *destroyer) Destroy() error {
 	//destroy terraform resource
 	if err := tf.Destroy(context.Background()); err != nil {
 		return err
+	}
+	if d.force {
+		if err := d.destroyWorkDir(); err != nil {
+			return err
+		}
+		return nil
 	}
 	// destroy image
 	if err := d.destroyImage(); err != nil {
@@ -82,6 +98,9 @@ func (d *destroyer) destroyWorkDir() error {
 
 func (d *destroyer) destroyKakoiVpnfile() error {
 	if _, err := os.Stat("kakoi.ovpn"); err != nil {
+		if err == os.ErrNotExist {
+			return nil
+		}
 		return err
 	}
 	return os.Remove("kakoi.ovpn")

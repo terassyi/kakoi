@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/terassyi/kakoi/infra/resource"
 	"github.com/terassyi/kakoi/infra/state"
@@ -53,11 +54,10 @@ func (b *builder) buildTemplate() error {
 }
 
 func (b *builder) create() error {
-	ctx := context.Background()
-	if err := b.tf.Init(ctx, tfexec.Upgrade(true), tfexec.LockTimeout("60s")); err != nil {
+	if err := b.tf.Init(context.Background()); err != nil {
 		return err
 	}
-	if err := b.tf.Apply(ctx); err != nil {
+	if err := b.tf.Apply(context.Background()); err != nil {
 		return err
 	}
 	return nil
