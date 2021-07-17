@@ -54,11 +54,10 @@ func (b *builder) buildTemplate() error {
 }
 
 func (b *builder) create() error {
-	ctx := context.Background()
-	if err := b.tf.Init(ctx); err != nil {
+	if err := b.tf.Init(context.Background()); err != nil {
 		return err
 	}
-	if err := b.tf.Apply(ctx); err != nil {
+	if err := b.tf.Apply(context.Background()); err != nil {
 		return err
 	}
 	return nil

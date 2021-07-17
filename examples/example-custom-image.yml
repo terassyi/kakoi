@@ -37,6 +37,7 @@ service:
     servers:
       - name: "custom-image"
         size: "t4g.micro"
+        number: 10
         subnet: "public"
         image:
           custom: true

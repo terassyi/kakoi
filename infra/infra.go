@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/terassyi/kakoi/infra/resource"
 	"github.com/terassyi/kakoi/infra/state"
 )
@@ -70,12 +69,11 @@ func (i *infra) Create() error {
 			return err
 		}
 	}
-	ctx := context.Background()
-	err := i.tf.Init(ctx, tfexec.LockTimeout("60s"))
+	err := i.tf.Init(context.Background())
 	if err != nil {
 		return err
 	}
-	if err := i.tf.Apply(ctx); err != nil {
+	if err := i.tf.Apply(context.Background()); err != nil {
 		return err
 	}
 

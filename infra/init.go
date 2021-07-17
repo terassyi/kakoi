@@ -203,6 +203,7 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 	const imagesBase = "images/"
 	var imageResources []resource.Resource
 	for _, s := range i.conf.Service.Hosts.Servers {
+		fmt.Println("[INFO] server: ", s.Name)
 		if s.Image.ImagePath != "" {
 			imagePath, err := i.buildAbsPath(s.Image.ImagePath)
 			if err != nil {
@@ -231,6 +232,7 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 			imageResources = append(imageResources, ib)
 		}
 	}
+	fmt.Println(imageResources)
 	return imageResources, nil
 }
 
