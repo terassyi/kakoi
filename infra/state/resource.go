@@ -67,14 +67,15 @@ type Hosts struct {
 }
 
 type Server struct {
-	Name    string       `json:"name"`
-	Size    string       `json:"size"`
-	Number  int          `json:"number"` // default 1
-	Subnet  string       `json:"subnet"`
-	Address []string     `json:"address"`
-	Image   *ServerImage `json:"image"`
-	Status  string       `json:"status"` // automatically generated
-	Ports   []int        `json:"ports"`
+	Name       string       `json:"name"`
+	Size       string       `json:"size"`
+	VolumeSize int          `json:"volume_size,omitempty` // default 8GB
+	Number     int          `json:"number"`               // default 1
+	Subnet     string       `json:"subnet"`
+	Address    []string     `json:"address"`
+	Image      *ServerImage `json:"image"`
+	Status     string       `json:"status"` // automatically generated
+	Ports      []int        `json:"ports"`
 }
 
 type ServerImage struct {

@@ -7,7 +7,7 @@ import (
 )
 
 func newImageBuilderTest() *ImageBuilder {
-	ib, _ := NewImageBuilder("test2", "test-region", "~/example/.kakoi", "test-custom-base-image", "test-user", "test-owner", nil, []string{"hoge1.sh", "hoge2.sh"})
+	ib, _ := NewImageBuilder("test2", "test-region", "~/example/.kakoi", "test-custom-base-image", "test-user", "test-owner", "", 0, nil, []string{"hoge1.sh", "hoge2.sh"})
 	return ib
 }
 

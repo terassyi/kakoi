@@ -9,28 +9,30 @@ import (
 
 const (
 	aws_default_image_id = "ami-01748a72bed07727c"
-	aws_default_size = "t2.micro"
+	aws_default_size     = "t2.micro"
 )
 
 type Server struct {
-	Name string
-	Image *Image
-	Size string
-	Subnet *Subnet
-	Ports []int
-	KeyPair *KeyPair
-	PrivateIp *net.IP
+	Name         string
+	Image        *Image
+	Size         string
+	VolumeSize   int
+	Subnet       *Subnet
+	Ports        []int
+	KeyPair      *KeyPair
+	PrivateIp    *net.IP
 	ImageBuilder ImageBuilder
 }
 
-func newServer(name, size string, subnet *Subnet, key *KeyPair, ports []int) (*Server, error) {
+func newServer(name, size string, volumeSize int, subnet *Subnet, key *KeyPair, ports []int) (*Server, error) {
 	s := &Server{
-		Name:      name,
-		Size: size,
-		Subnet:    subnet,
-		Ports:     ports,
-		KeyPair:   key,
-		PrivateIp: nil,
+		Name:       name,
+		Size:       size,
+		Subnet:     subnet,
+		VolumeSize: volumeSize,
+		Ports:      ports,
+		KeyPair:    key,
+		PrivateIp:  nil,
 	}
 	if size == "" {
 		s.Size = aws_default_size
@@ -62,7 +64,7 @@ func (s *Server) BuildTemplate(workDir string) error {
 }
 
 type Image struct {
-	Id string
+	Id   string
 	Path string
 }
 

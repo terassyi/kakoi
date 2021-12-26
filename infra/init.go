@@ -218,12 +218,15 @@ func (i *initializer) createImageUploader() ([]resource.Resource, error) {
 			if err != nil {
 				return nil, err
 			}
-			ib, err := resource.NewImageBuilder(s.Name,
+			ib, err := resource.NewImageBuilder(
+				s.Name,
 				i.conf.Provider.Region,
 				base,
 				s.Image.BaseImage,
 				s.Image.LoginUser,
 				s.Image.AwsImageOwner,
+				s.Image.Architecture,
+				s.VolumeSize,
 				nil,
 				s.Image.ScriptFilePath)
 			if err != nil {

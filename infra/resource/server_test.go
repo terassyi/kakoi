@@ -13,7 +13,7 @@ func TestServer_BuildTemplate(t *testing.T) {
 	}
 	k := newKeyPair("./test", "test-key")
 
-	server, err := newServer("test", "test-size-type", s, k, []int{80})
+	server, err := newServer("test", "test-size-type", 0, s, k, []int{80})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -41,6 +41,7 @@ service:
         subnet: "public"
         image:
           custom: true
+          architecture: arm64
           base_image: "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
           login_user: ubuntu
           aws_image_owner: "099720109477"

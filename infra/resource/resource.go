@@ -2,10 +2,11 @@ package resource
 
 import (
 	"fmt"
-	"github.com/terassyi/kakoi/infra/aws"
-	"github.com/terassyi/kakoi/infra/state"
 	"path/filepath"
 	"strconv"
+
+	"github.com/terassyi/kakoi/infra/aws"
+	"github.com/terassyi/kakoi/infra/state"
 )
 
 type Resource interface {
@@ -80,11 +81,10 @@ func New(conf *state.State) ([]Resource, error) {
 		}
 		for i := 0; i < server.Number; i++ {
 			name := server.Name + "-" + strconv.Itoa(i)
-			s, err := newServer(name, server.Size, subnet, keyPair, server.Ports)
+			s, err := newServer(name, server.Size, server.VolumeSize, subnet, keyPair, server.Ports)
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("server name=", name)
 			image := NewImage(server.Image.Id, server.Image.ImagePath)
 			s.SetImage(image)
 			resources = append(resources, s)

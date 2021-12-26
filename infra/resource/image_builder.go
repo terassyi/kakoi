@@ -13,9 +13,11 @@ import (
 )
 
 const (
-	builderDesc      string = "instance image for kakoi exercise environment."
-	packer_file_name string = "image_builder.json"
-	kakoi_dir        string = ".kakoi"
+	builderDesc           string = "instance image for kakoi exercise environment."
+	packer_file_name      string = "image_builder.json"
+	kakoi_dir             string = ".kakoi"
+	arm_instance_type     string = "t4g.micro"
+	default_instance_type string = "t2.micro"
 )
 
 var (
@@ -83,19 +85,23 @@ type ImageBuilder struct {
 	Base          string
 	User          string
 	ImageOwner    string
+	Architecture  string
+	VolumeSize    int
 	Files         []string
 	Commands      []string
 	BuildSpecPath string
 	ScriptsBase   string
 }
 
-func NewImageBuilder(name, region, base, baseImage, user, imageOwner string, commands, files []string) (*ImageBuilder, error) {
+func NewImageBuilder(name, region, base, baseImage, user, imageOwner, arch string, volumeSize int, commands, files []string) (*ImageBuilder, error) {
 	return &ImageBuilder{
 		Region:        region,
 		Name:          name,
 		Base:          baseImage,
 		User:          user,
 		ImageOwner:    imageOwner,
+		Architecture:  arch,
+		VolumeSize:    volumeSize,
 		Files:         files,
 		Commands:      commands,
 		BuildSpecPath: filepath.Join(base, "images"),
@@ -135,7 +141,7 @@ func (i *ImageBuilder) BuildTemplate(workDir string) error {
 }
 
 func (i *ImageBuilder) createPackerBuilder() (*packerBuilder, error) {
-	return newPackerBuilder(i.Name, i.Region, i.Base, i.User, i.ImageOwner, i.Commands, i.Files)
+	return newPackerBuilder(i.Name, i.Region, i.Base, i.User, i.ImageOwner, i.Architecture, i.VolumeSize, i.Commands, i.Files)
 }
 
 type packerBuilder struct {
@@ -153,14 +159,15 @@ func (p *packerBuilder) outputJson(path string) error {
 }
 
 type awsBuilder struct {
-	Type           string             `json:"type"`
-	Region         string             `json:"region"`
-	InstanceType   string             `json:"instance_type"`
-	UserName       string             `json:"ssh_username"`
-	AmiName        string             `json:"ami_name"`
-	AmiDescription string             `json:"ami_description"`
-	PublicIp       bool               `json:"associate_public_ip_address"`
-	Filters        awsSourceAmiFilter `json:"source_ami_filter"`
+	Type                      string                     `json:"type"`
+	Region                    string                     `json:"region"`
+	InstanceType              string                     `json:"instance_type"`
+	UserName                  string                     `json:"ssh_username"`
+	AmiName                   string                     `json:"ami_name"`
+	AmiDescription            string                     `json:"ami_description"`
+	PublicIp                  bool                       `json:"associate_public_ip_address"`
+	Filters                   awsSourceAmiFilter         `json:"source_ami_filter"`
+	LaunchBlockDeviceMappings *launchBlockDeviceMappings `json:"launch_block_device_mappings,omitempty"`
 }
 
 type awsSourceAmiFilter struct {
@@ -175,14 +182,20 @@ type awsSourceFilterImpl struct {
 	RootDeviceType string `json:"root-device-type"`
 }
 
+type launchBlockDeviceMappings struct {
+	DeviceName          string `json:"device_name"`
+	VolumeSize          int    `json:"volume_size"`
+	DeleteOnTermination bool   `json:"delete_on_termination"`
+}
+
 type provisioner struct {
 	Type    string   `json:"type"`
 	Inline  []string `json:"inline"`
 	Scripts []string `json:"scripts"`
 }
 
-func newPackerBuilder(name, region, base, user, imageOwner string, commands, files []string) (*packerBuilder, error) {
-	builder := newAwsBuilder(region, name, base, user, imageOwner)
+func newPackerBuilder(name, region, base, user, imageOwner, arch string, volumeSize int, commands, files []string) (*packerBuilder, error) {
+	builder := newAwsBuilder(region, name, base, user, imageOwner, arch, volumeSize)
 	var filenames []string
 	for _, p := range files {
 		//if _, err := os.Stat(p); err != nil {
@@ -200,21 +213,31 @@ func newPackerBuilder(name, region, base, user, imageOwner string, commands, fil
 	}, nil
 }
 
-func newAwsBuilder(region, name, base, user, imageOwner string) *awsBuilder {
+func newAwsBuilder(region, name, base, user, imageOwner, arch string, volumeSize int) *awsBuilder {
 	if user == "" {
 		user = "ec2-user"
 	}
-	return &awsBuilder{
+	insType := ""
+	if arch == "arm64" {
+		insType = arm_instance_type
+	} else {
+		insType = default_instance_type
+	}
+	b := &awsBuilder{
 		Type:         "amazon-ebs",
 		Region:       region,
-		InstanceType: "t2.micro",
+		InstanceType: insType,
 		// InstanceType:   "t4g.micro",
-		UserName:       user,
-		AmiName:        "kakoi-" + name,
-		AmiDescription: builderDesc,
-		PublicIp:       true,
-		Filters:        *newAwsSourceFilter(base, imageOwner),
+		UserName:                  user,
+		AmiName:                   "kakoi-" + name,
+		AmiDescription:            builderDesc,
+		PublicIp:                  true,
+		Filters:                   *newAwsSourceFilter(base, imageOwner),
+		LaunchBlockDeviceMappings: newLaunchBlockDeviceMappings(volumeSize),
 	}
+	fmt.Println("instance type: ", b.InstanceType)
+	fmt.Println("volume size: ", volumeSize)
+	return b
 }
 
 func newAwsSourceFilter(base, imageOwner string) *awsSourceAmiFilter {
@@ -233,6 +256,22 @@ func newAwsSourceFilter(base, imageOwner string) *awsSourceAmiFilter {
 		},
 		MostRecent: true,
 		Owners:     imageOwners,
+	}
+}
+
+func newLaunchBlockDeviceMappings(volumeSize int) *launchBlockDeviceMappings {
+	const (
+		deviceName          string = "/dev/sda1"
+		deleteOnTermination bool   = true
+	)
+	if volumeSize == 0 {
+		fmt.Println("launch_blocl_device_mappins is not created.")
+		return nil
+	}
+	return &launchBlockDeviceMappings{
+		DeviceName:          deviceName,
+		VolumeSize:          volumeSize,
+		DeleteOnTermination: deleteOnTermination,
 	}
 }
 
