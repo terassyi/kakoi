@@ -205,9 +205,10 @@ func newAwsBuilder(region, name, base, user, imageOwner string) *awsBuilder {
 		user = "ec2-user"
 	}
 	return &awsBuilder{
-		Type:           "amazon-ebs",
-		Region:         region,
-		InstanceType:   "t4g.micro",
+		Type:         "amazon-ebs",
+		Region:       region,
+		InstanceType: "t2.micro",
+		// InstanceType:   "t4g.micro",
 		UserName:       user,
 		AmiName:        "kakoi-" + name,
 		AmiDescription: builderDesc,
