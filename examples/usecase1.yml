@@ -1,0 +1,29 @@
+provider:
+  name: "aws"
+  profile: "kakoi"
+  region: "ap-northeast-1"
+service:
+  name: "usecase1"
+  network:
+    name: "usecase1-network"
+    range: "10.0.0.0/16"
+    subnets:
+      - name: "usecase1-subnet"
+        range: "10.0.1.0/24"
+        private: true
+        vpn_gateway_associated: true
+    vpn_gateway:
+      range: "10.0.10.0/22"
+      domain: "usecase1.kakoi.net"
+      associated_subnet: "usecase1-subnet"
+        
+  hosts:
+    key:
+      name: "usecase1-key"
+    servers:
+      - name: "usecase1-moodle"
+        subnet: "usecase1-subnet"
+        image:
+          custom: true
+          scripts:
+            - "usecase1-moodle.sh"

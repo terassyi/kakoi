@@ -1,0 +1,31 @@
+provider:
+  name: "aws"
+  profile: "example-profile"
+  region: "exampel-region"
+
+service:
+  network:
+    name: "example-network"
+    range: "10.10.0.0/16"
+    subnets:
+        - name: "example-subnet"
+          range: "10.10.1.0/24"
+          private: false
+          vpn_gateway_associated: true
+    vpn_gateway:
+      range: "10.10.30.0/22"
+      domain: "example.com"
+      associated_subnet: "example-subnet"
+
+  hosts:
+    key:
+      name: "example-key"
+    servers:
+      - name: "example-server"
+        subnet: "example-subnet"
+        image:
+          custom: true
+          scripts:
+            - "example-server.sh"
+
+
