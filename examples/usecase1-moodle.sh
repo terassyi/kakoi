@@ -19,7 +19,12 @@ sudo systemctl start docker.service
 # get moodle docker-compose
 git clone https://github.com/bitnami/bitnami-docker-moodle.git
 
-# change settings for japanese
-sed -i -e "29i RUN echo 'ja_JP.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen" bitnami-docker-moodle/3/debian-10/Dockerfile
+echo "cd bitnami-docker-moodle/3/debian-10"
+cd bitnami-docker-moodle/3/debian-10
 
+# change settings for japanese
+sed -i -e "29i RUN echo 'ja_JP.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen" ./Dockerfile
+
+# echo "sudo docker-compose up -d"
+sudo docker-compose build
 # sudo docker-compose up -d

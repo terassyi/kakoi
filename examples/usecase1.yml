@@ -23,6 +23,8 @@ service:
     servers:
       - name: "usecase1-moodle"
         subnet: "usecase1-subnet"
+        size: "t3.large"
+        volume_size: 20
         image:
           custom: true
           scripts:

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	kakoi_vpn_id string = "kakoi-vpn-id"
+	kakoi_vpn_id           string = "kakoi-vpn-id"
 	kakoi_ovpn_config_name string = "kakoi.ovpn"
 )
 
@@ -50,7 +50,7 @@ type Subnet struct {
 	Network *Network
 	Cidr    *net.IPNet
 	Private bool
-	AZ  string
+	AZ      string
 }
 
 func newSubnet(name, cidr string, private bool, network *Network) (*Subnet, error) {
@@ -63,7 +63,7 @@ func newSubnet(name, cidr string, private bool, network *Network) (*Subnet, erro
 		Network: network,
 		Cidr:    ipNet,
 		Private: private,
-		AZ:  network.Region + "a",
+		AZ:      network.Region + "a",
 	}, nil
 }
 
@@ -142,7 +142,6 @@ func (v *Vpn) Create() error {
 	return v.createOvpnConfig()
 }
 
-
 func (v *Vpn) createOvpnConfig() error {
 	type ovpnConfig struct {
 		Id     string
@@ -162,7 +161,7 @@ func (v *Vpn) createOvpnConfig() error {
 	if err != nil {
 		return err
 	}
-	bytes := make([]byte, 512)
+	bytes := make([]byte, 2048)
 	l, err := outputFile.Read(bytes)
 	if err != nil {
 		return err
@@ -211,4 +210,3 @@ func (v *Vpn) createOvpnConfig() error {
 	}
 	return nil
 }
-
