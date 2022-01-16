@@ -6,11 +6,12 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"golang.org/x/crypto/ssh"
 	"math/big"
 	"os"
 	"path/filepath"
 	"time"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func GeneratePki(path, domain string) error {
@@ -181,7 +182,7 @@ func GenerateKeyPair(name, path string) error {
 		return err
 	}
 	// change permission
-	if err := os.Chmod(filepath.Join(path, name) + ".pem", 0700); err != nil {
+	if err := os.Chmod(filepath.Join(path, name)+".pem", 0700); err != nil {
 		return err
 	}
 	return nil
