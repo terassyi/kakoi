@@ -1,6 +1,6 @@
 provider:
   name: "aws"
-  profile: "example-profile"
+  profile: "kakoi"
   region: "ap-northeast-1"
 service:
   name: "example"
@@ -32,7 +32,9 @@ service:
       - name: "example-host1"
         subnet: "subnet1"
         image:
-          image_path: "~/example-host1.ova"
+          custom: true
+          scripts:
+            - "example-host1.sh"
       - name: "example-host2"
         subnet: "subnet2"
         image:
