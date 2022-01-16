@@ -27,12 +27,16 @@ func GeneratePki(path, domain string) error {
 		Organization:       []string{"kakoi"},
 		Country:            []string{"JP"},
 	}
+	before := time.Now().UTC()
+	after := time.Now().UTC().AddDate(1, 0, 0)
 
 	caTpl := &x509.Certificate{
-		SerialNumber:          big.NewInt(1),
-		Subject:               subjectCa,
-		NotAfter:              time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-		NotBefore:             time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+		SerialNumber: big.NewInt(1),
+		Subject:      subjectCa,
+		// NotAfter:     time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+		// NotBefore:             time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+		NotAfter:              after,
+		NotBefore:             before,
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		BasicConstraintsValid: true,
@@ -74,11 +78,13 @@ func GeneratePki(path, domain string) error {
 	sslTpl := &x509.Certificate{
 		SerialNumber: big.NewInt(123),
 		Subject:      subjectSsl,
-		NotAfter:     time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-		NotBefore:    time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		DNSNames:     []string{serverName},
+		// NotAfter:     time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+		// NotBefore:    time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+		NotAfter:    after,
+		NotBefore:   before,
+		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames:    []string{serverName},
 	}
 
 	derSslCertificate, err := x509.CreateCertificate(rand.Reader, sslTpl, caTpl, publicSslKey, privateCaKey)
@@ -118,10 +124,12 @@ func GeneratePki(path, domain string) error {
 	cliTpl := &x509.Certificate{
 		SerialNumber: big.NewInt(456),
 		Subject:      subjectClient,
-		NotAfter:     time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-		NotBefore:    time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
-		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		// NotAfter:     time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+		// NotBefore:    time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+		NotAfter:    after,
+		NotBefore:   before,
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
 
 	derClientCertificate, err := x509.CreateCertificate(rand.Reader, cliTpl, caTpl, publicClientKey, privateCaKey)

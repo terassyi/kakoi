@@ -27,14 +27,16 @@ type destroyer struct {
 func NewDestroyer(path string, force bool) (Destroyer, error) {
 	fmt.Println(force)
 	base := filepath.Join(filepath.Dir(path), kakoi_dir)
-	if force {
+	if !isExistStateFile(path) {
+		// return nil, fmt.Errorf("[ERROR] state file is not found")
+		if !force {
+			return nil, fmt.Errorf("[ERROR] state file is not found.")
+		}
 		return &destroyer{
 			workDir: base,
-			force:   force,
+			force:   true,
+			conf:    nil,
 		}, nil
-	}
-	if !isExistStateFile(path) {
-		return nil, fmt.Errorf("[ERROR] state file is not found")
 	}
 	parser, err := state.NewParser(base, filepath.Join(base, kakoi_state))
 	if err != nil {
@@ -47,7 +49,7 @@ func NewDestroyer(path string, force bool) (Destroyer, error) {
 	return &destroyer{
 		workDir: base,
 		conf:    s,
-		force:   false,
+		force:   force,
 	}, nil
 }
 
@@ -61,6 +63,11 @@ func (d *destroyer) Destroy() error {
 		return err
 	}
 	if d.force {
+		if d.conf != nil {
+			if err := d.destroyImage(); err != nil {
+				return err
+			}
+		}
 		if err := d.destroyWorkDir(); err != nil {
 			return err
 		}
